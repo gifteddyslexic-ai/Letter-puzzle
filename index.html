@@ -304,11 +304,15 @@ svg.lined{overflow:visible}
 #o-slots,#g-grid,#r-grid{margin:12px 10px}
 #r-grid .tile{aspect-ratio:118/100;padding:1px;border-radius:8px;border-color:transparent;background:transparent;cursor:pointer}
 #r-grid.low .tile{aspect-ratio:102/122}
+#r-grid .tile,#r-grid .tile svg{transition:opacity .25s,background-color .2s}
+#r-grid .tile.covered svg{transform:none}
 #r-grid .tile.covered{background:repeating-linear-gradient(45deg,var(--back-a) 0 7px,var(--back-b) 7px 14px)}
 #r-grid .tile.now{transform:none;border-color:transparent;box-shadow:0 0 0 3px var(--now) inset;background-color:color-mix(in srgb,var(--now) 14%,transparent)}
 #r-grid .tile.said g.art path{fill:var(--solved)}
 #r-grid .tile.said g.art path{transition:fill .3s}
 .coach{position:absolute;left:14px;right:14px;top:96px;z-index:20;background:#fff;border-radius:18px;box-shadow:0 14px 40px rgba(20,30,40,.25);border:2px solid #f3b6d4;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;max-width:560px;margin:0 auto}
+.coach-x{position:absolute;top:6px;right:8px;width:38px;height:38px;border:0;border-radius:50%;background:#fde7f1;color:#7a2a52;font-size:24px;line-height:1;cursor:pointer}
+.coach-x:hover{background:#f9d2e4}
 .coach-letters{display:flex;align-items:center;justify-content:center;gap:10px;height:84px}
 .coach-letters svg{height:84px;width:auto}
 .coach-letters .vs{font-family:var(--f-display);font-weight:600;color:var(--muted)}
@@ -435,6 +439,7 @@ svg.lined{overflow:visible}
       <div class="grid fit" id="r-grid"></div>
       <p class="status" id="r-status"></p>
       <div class="coach" id="coach" hidden role="dialog" aria-live="polite">
+        <button class="coach-x" id="coach-x" aria-label="Back to the alphabet" title="Back to the alphabet">&times;</button>
         <div class="coach-letters" id="coach-letters"></div>
         <p class="coach-q" id="coach-q" title="Hear the question again"></p>
         <div class="coach-ans" id="coach-ans"></div>
@@ -1341,10 +1346,9 @@ function fitRecite(){const g=$("r-grid");if(!g||$("view-recite").hidden)return;f
 {const ro=new ResizeObserver(()=>fitRecite());ro.observe($("view-recite"));ro.observe($("r-grid"))}
 function reciteTap(t,quiet){
   const i=+t.dataset.i,c=R.seq[i];LISTEN.lastProgress=performance.now();
-  if(i<R.pos){say(spoken(c),1);t.animate([{transform:"scale(1)"},{transform:"scale(1.2)"},{transform:"scale(1)"}],{duration:300});return}
+  if(i<R.pos){say(spoken(c),1);return}
   if(i!==R.pos){reciteEvent("mistake",{expected:R.seq[R.pos],heard:c,position:R.pos});return}
   t.classList.remove("covered","now");t.classList.add("said");t.setAttribute("aria-label",c);
-  t.animate([{transform:"scale(1)"},{transform:"scale(1.4)",offset:.4},{transform:"scale(1)"}],{duration:420,easing:"cubic-bezier(.3,1.5,.5,1)"});
   if(!quiet)say(spoken(c),1);try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
   reciteEvent("correct",{expected:c,position:i});
   R.pos++;const n=$("r-grid").children[R.pos];if(n)n.classList.add("now");
@@ -1388,8 +1392,6 @@ function reciteEvent(type,info){
   info=Object.assign({sequence:R.seq.join(""),direction:DIR?"backwards":"forwards",listening:LISTEN.on},info);
   const fn=RECITE_RESPONSES[type];if(typeof fn==="function"&&fn(info)===true)return;
   const cur=$("r-grid").children[R.pos];
-  if(type==="mistake"&&cur)nudge(cur);
-  if(type==="hesitation"&&cur)cur.animate([{transform:"scale(1)"},{transform:"scale(1.15)"},{transform:"scale(1)"},{transform:"scale(1.15)"},{transform:"scale(1)"}],{duration:1400});
 }
 const MLOG=/debug/i.test(location.hash+location.search);
 function mlog(t){if(!MLOG)return;const el=$("r-log");el.hidden=false;el.textContent=(new Date().toTimeString().slice(3,8)+" "+t+"\n"+el.textContent).slice(0,4000)}
@@ -1417,7 +1419,9 @@ function startListening(){
   rec.onresult=e=>{if(MLOG)try{for(let r=e.resultIndex;r<e.results.length;r++){const x=e.results[r];mlog("result #"+r+(x.isFinal?" final":" interim")+": "+Array.from({length:x.length},(_,i)=>"“"+x[i].transcript+"”").join(" / ")+" → letters "+(heardLetters(x[0].transcript).join("")||"none")+", want "+(R.seq[R.pos]||"-"))}}catch(err){mlog("log error "+err)}
     LISTEN.capErr=0;if(/No sound/.test($("r-notice").textContent))showNotice("");
     if(LISTEN.paused||VIEW!=="recite")return;
-    if(COACH.active){if(COACH.speaking)return;for(let r=e.resultIndex;r<e.results.length;r++){const res=e.results[r];
+    if(COACH.active){for(let r=e.resultIndex;r<e.results.length;r++){const res=e.results[r];
+        if(BACK_WORDS.test(res[0].transcript)){coachClose();return}
+        if(COACH.speaking)continue;
         if(res.isFinal)coachAnswer(res[0].transcript);else{$("coach-live").textContent=res[0].transcript+"…";coachTimer()}}return}
     for(let r=e.resultIndex;r<e.results.length;r++){
       const res=e.results[r],done=LISTEN.consumed[r]||0;
@@ -1459,7 +1463,20 @@ function stopListening(){LISTEN.on=false;clearInterval(LISTEN.hesT);try{LISTEN.r
 function pauseListening(ms){if(!LISTEN.on)return;LISTEN.paused=true;try{LISTEN.rec.abort()}catch(e){}
   setTimeout(()=>{LISTEN.paused=false;LISTEN.consumed={};if(LISTEN.on){try{LISTEN.rec.start()}catch(e){}}},ms)}
 function setMic(on){$("r-mic").setAttribute("aria-pressed",on);$("r-mic").querySelector("span").textContent=on?"Listening":"Listen"}
+// with #debug: a Test microphone button checks which microphone the browser uses and whether any sound reaches it (2 seconds)
+async function micCheck(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){mlog("mic check: not available");return}
+  let st;try{st=await navigator.mediaDevices.getUserMedia({audio:true})}catch(err){mlog("mic check: "+err.name+" "+err.message);return}
+  const tr=st.getAudioTracks()[0];mlog("mic check: using “"+(tr&&tr.label||"unknown")+"” — say something now");
+  try{const devs=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="audioinput").map(d=>d.label||"?");mlog("microphones: "+devs.join(" | "))}catch(e){}
+  try{const AC=window.AudioContext||window.webkitAudioContext,ac=new AC(),an=ac.createAnalyser();ac.createMediaStreamSource(st).connect(an);
+    const buf=new Float32Array(an.fftSize);let peak=0;const t0=performance.now();
+    await new Promise(res=>{const f=()=>{an.getFloatTimeDomainData(buf);for(const v of buf)peak=Math.max(peak,Math.abs(v));performance.now()-t0<2000?requestAnimationFrame(f):res()};f()});
+    mlog("mic check: loudest sound "+Math.round(peak*100)+"%"+(peak<.01?" — silence: this microphone hears nothing":""));ac.close()}catch(e){mlog("mic check: level failed "+e)}
+  st.getTracks().forEach(t=>t.stop());mlog("mic check done — now tap Listen")}
 $("r-mic").onclick=()=>{if(LISTEN.on)stopListening();else startListening()};
+if(MLOG){const b=document.createElement("button");b.className="chip";b.textContent="Test microphone";b.style.margin="0 12px";
+  b.onclick=async()=>{if(LISTEN.on)stopListening();b.disabled=true;await micCheck();b.disabled=false};$("r-log").before(b);mlog("debug on")}
 /* ---------- Recite: talking about a tricky letter ----------
    A scripted conversation (no AI needed). Steps:
    words → (anything else?) → restart;  the same letter again → remind → similar ⇄ different → restart. */
@@ -1467,7 +1484,7 @@ setInterval(()=>{ // hesitation: no progress for a while once the learner has st
   if(VIEW!=="recite"||HDEMO||COACH.active||LISTEN.paused||R.pos===0||R.pos>=R.seq.length)return;
   const sec=(performance.now()-LISTEN.lastProgress)/1000;
   if(sec>(LISTEN.on?6:8)){LISTEN.lastProgress=performance.now();reciteEvent("hesitation",{expected:R.seq[R.pos],position:R.pos,seconds:Math.round(sec)})}},1000);
-const COACH={active:false,step:null,letter:null,other:null,words:0,askedElse:false,speaking:false,timer:null,seen:store.get("coachseen",{})};
+const COACH={gen:0,active:false,step:null,letter:null,other:null,words:0,askedElse:false,speaking:false,timer:null,seen:store.get("coachseen",{})};
 const Q={
   words:L=>`Tell me words with the letter ${spoken(L)}.`,
   else:()=>"Anything else?",
@@ -1482,8 +1499,14 @@ function coachLetters(){const L=COACH.letter,O=COACH.other;$("coach-letters").in
 function coachTimer(){clearTimeout(COACH.timer);const wait={words:12,else:8,remind:12,similar:12,different:12}[COACH.step]||10;
   COACH.timer=setTimeout(()=>coachAnswer(""),wait*1000)}
 function coachSay(text,then){COACH.speaking=true;$("coach-q").textContent=text;$("coach-live").textContent="";clearTimeout(COACH.timer);
-  if(LISTEN.on){try{LISTEN.rec.abort()}catch(e){}}
-  say(text,.95,()=>{COACH.speaking=false;if(LISTEN.on){try{LISTEN.rec.start()}catch(e){}}if(then)then();else coachTimer()})}
+  const gen=++COACH.gen;
+  say(text,.95,()=>{if(gen!==COACH.gen||!COACH.active)return; // interrupted: the learner has gone back to the alphabet
+    COACH.speaking=false;
+    // forget anything heard while the question was spoken (it may be the question itself)
+    if(LISTEN.on){try{LISTEN.rec.abort()}catch(e){}setTimeout(()=>{if(LISTEN.on){try{LISTEN.rec.start()}catch(e){}}},150)}
+    if(then)then();else coachTimer()})}
+// words that stop the question and go back to the alphabet (none of them appear in the questions)
+const BACK_WORDS=/\b(stop|back|skip|alphabet|enough|never ?mind|carry on|go on|cancel|quit)\b/i;
 function coachAsk(step){COACH.step=step;$("coach-ans").innerHTML="";coachLetters();coachSay(Q[step](COACH.letter,COACH.other))}
 function startCoach(letter){
   if(COACH.active||HDEMO)return;
@@ -1522,10 +1545,17 @@ function coachAnswer(text){
 function coachFinish(){clearTimeout(COACH.timer);
   coachSay(RESTART_LINES[rand(RESTART_LINES.length)],()=>{COACH.active=false;$("coach").hidden=true;startRecite();LISTEN.lastProgress=performance.now()});
 }
-function coachClose(){clearTimeout(COACH.timer);COACH.active=false;COACH.speaking=false;$("coach").hidden=true;LISTEN.lastProgress=performance.now()}
+function coachClose(){clearTimeout(COACH.timer);COACH.gen++;
+  const wasSpeaking=COACH.speaking;COACH.active=false;COACH.speaking=false;$("coach").hidden=true;LISTEN.lastProgress=performance.now();
+  try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}
+  // carry on from the same letter; start fresh listening so nothing said to the question is counted as a letter
+  if(LISTEN.on){LISTEN.consumed={};try{LISTEN.rec.abort()}catch(e){}setTimeout(()=>{if(LISTEN.on){try{LISTEN.rec.start()}catch(e){}}},150)}}
 $("coach-form").onsubmit=e=>{e.preventDefault();const v=$("coach-in").value;$("coach-in").value="";if(v.trim())coachAnswer(v)};
 $("coach-none").onclick=()=>coachAnswer("no");
-$("coach-skip").onclick=coachClose;
+$("coach-skip").onclick=coachClose;$("coach-x").onclick=coachClose;
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&COACH.active)coachClose()});
+$("r-grid").addEventListener("pointerdown",e=>{if(COACH.active){e.stopPropagation();e.preventDefault();coachClose();COACH.justClosed=true;setTimeout(()=>COACH.justClosed=false,500)}},true);
+$("r-grid").addEventListener("click",e=>{if(COACH.justClosed){e.stopPropagation()}},true);
 $("coach-q").onclick=()=>coachSay($("coach-q").textContent);
 // the built-in responses: mistakes and hesitations start the conversation (replace these to change it)
 RECITE_RESPONSES.mistake=info=>{startCoach(info.expected);return true};
