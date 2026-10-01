@@ -324,6 +324,7 @@ nav.tabs .pill{display:grid;place-items:center;width:52px;height:30px;border-rad
 .mic[aria-pressed="true"] svg{animation:micpulse 1.2s ease-in-out infinite}
 .mic.unsupported{opacity:.6}
 @keyframes micpulse{50%{transform:scale(1.15)}}
+.notice-open{display:inline-block;margin:4px 0;font-weight:700;color:var(--navy,#1f2a4a)}
 .micstate{font-size:13px;color:var(--muted);min-width:0}
 .micstate.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e84494;margin-right:6px;animation:micpulse 1s infinite}
 .notice{margin:0;padding:8px 12px;border-radius:10px;background:#fff6e0;border:1px solid #f2d48a;color:#6b4e00;font-size:13.5px;line-height:1.35;flex:none}
@@ -1324,7 +1325,7 @@ function renderRecite(){
   fitRecite();
 }
 function fitRecite(){const g=$("r-grid");if(!g||$("view-recite").hidden)return;fitGrid(g,g.children.length||26,2,4)}
-new ResizeObserver(()=>fitRecite()).observe($("view-recite"));
+{const ro=new ResizeObserver(()=>fitRecite());ro.observe($("view-recite"));ro.observe($("r-grid"))}
 function reciteTap(t,quiet){
   const i=+t.dataset.i,c=R.seq[i];LISTEN.lastProgress=performance.now();
   if(i<R.pos){say(spoken(c),1);t.animate([{transform:"scale(1)"},{transform:"scale(1.2)"},{transform:"scale(1)"}],{duration:300});return}
@@ -1377,12 +1378,23 @@ function reciteEvent(type,info){
   if(type==="hesitation"&&cur)cur.animate([{transform:"scale(1)"},{transform:"scale(1.15)"},{transform:"scale(1)"},{transform:"scale(1.15)"},{transform:"scale(1)"}],{duration:1400});
 }
 function setMicState(text,cls){const el=$("r-micstate");el.textContent=text;el.className="micstate"+(cls?" "+cls:"")}
-function showNotice(html){const n=$("r-notice");n.innerHTML=html;n.hidden=!html}
+function showNotice(html){const n=$("r-notice");n.innerHTML=html;n.hidden=!html;requestAnimationFrame(fitRecite)}
+// is the app shown inside a frame on another page (a website embed, or the preview)?
+const FRAMED=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+function micPolicyBlocked(){const p=document.permissionsPolicy||document.featurePolicy;try{return !!(p&&p.allowsFeature&&!p.allowsFeature("microphone"))}catch(e){return false}}
+function micBlockedNotice(){
+  const own=/^https?:/.test(location.protocol)?` <a class="notice-open" href="${location.href.replace(/"/g,"&quot;")}" target="_blank" rel="noopener">Open the app in its own tab</a>`:"";
+  showNotice(FRAMED
+    ?"<b>The microphone can't be used here.</b> The app is shown inside a frame on this page, and the frame isn't allowed to use the microphone."+own+" You can still tap each letter as you say it."
+    :"<b>The microphone isn't allowed.</b> Allow the microphone for this site in the browser's settings (the icon beside the web address), then tap Listen again. You can still tap each letter as you say it.")}
 function startListening(){
   if(!SR){showNotice("<b>Listening isn't available in this browser.</b> Try Chrome, Edge or Safari. You can still tap each letter as you say it.");setMic(false);return}
+  if(location.protocol==="file:"){showNotice("<b>Listening needs the app to be opened from a web address</b>, not as a file on this device. Put it on a website (or a local server) and open it from there. You can still tap each letter as you say it.");setMic(false);return}
+  if(micPolicyBlocked()){micBlockedNotice();setMic(false);return}
   showNotice("");LISTEN.on=true;LISTEN.consumed={};LISTEN.lastProgress=performance.now();setMic(true);
   const rec=new SR();rec.lang="en-GB";rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=3;LISTEN.rec=rec;
-  rec.onstart=()=>setMicState("Listening…","live");
+  // every restart begins a fresh list of results, so forget what was counted in the last one
+  rec.onstart=()=>{LISTEN.consumed={};setMicState("Listening…","live")};
   rec.onresult=e=>{if(LISTEN.paused||VIEW!=="recite")return;
     if(COACH.active){if(COACH.speaking)return;for(let r=e.resultIndex;r<e.results.length;r++){const res=e.results[r];
         if(res.isFinal)coachAnswer(res[0].transcript);else{$("coach-live").textContent=res[0].transcript+"…";coachTimer()}}return}
@@ -1397,14 +1409,19 @@ function startListening(){
         const want=R.seq[R.pos].toLowerCase(),got=letters[k];
         // accept the expected letter from any of the recogniser's guesses for this phrase
         const alt=alts.some(a=>heardLetters(a.transcript)[k]===want);
+        // a letter just said again (phones often repeat the whole phrase in each new result) is skipped, not a mistake
+        const recent=R.seq.slice(Math.max(0,R.pos-4),R.pos).map(c=>c.toLowerCase());
         if(got===want||alt){const t=$("r-grid").children[R.pos];if(t)reciteTap(t,true)}
+        else if(recent.includes(got)){}
         else if(res.isFinal)reciteEvent("mistake",{expected:R.seq[R.pos],heard:got,position:R.pos});
         else{LISTEN.consumed[r]=k;break}   // interim guess may still change: wait for more
         LISTEN.consumed[r]=k+1}
     }};
   rec.onerror=e=>{
     if(e.error==="not-allowed"||e.error==="service-not-allowed"){LISTEN.on=false;setMic(false);
-      showNotice("<b>The microphone can't be used here.</b> Inside this preview the browser blocks it. Open the app as its own web page to use listening. You can still tap each letter as you say it.")}
+      // Safari answers "service-not-allowed" when the device's own speech recognition (Dictation/Siri) is switched off
+      if(e.error==="service-not-allowed"&&!micPolicyBlocked())showNotice("<b>Speech recognition is switched off on this device.</b> On a Mac, turn on Dictation in System Settings › Keyboard, then reload this page and tap Listen. On an iPhone or iPad, turn on Dictation in Settings › General › Keyboard. You can still tap each letter as you say it.");
+      else micBlockedNotice()}
     else if(e.error==="network"){showNotice("<b>Listening needs an internet connection</b> in this browser. You can still tap each letter.")}
     else if(e.error!=="no-speech"&&e.error!=="aborted")setMicState("Didn't catch that","");
   };
@@ -1565,7 +1582,8 @@ document.querySelectorAll("[data-demo]").forEach(b=>b.onclick=()=>{const v=b.dat
 /* ---------- start ---------- */
 renderDir();
 $("b-turn").setAttribute("aria-pressed",B.turn);renderShapes();startBuild(B.letter);updateNext();startOrder();renderGameControls();scoreText();startRecite();
-const v0=store.get("view","build");if(views.includes(v0))show(v0);
+// a link ending in #build, #games, #order or #recite opens that part of the app
+const vh=location.hash.slice(1).toLowerCase(),v0=views.includes(vh)?vh:store.get("view","build");if(views.includes(v0))show(v0);
 if(VIEW==="build")maybeDemo();else maybeHDemo(VIEW);
 </script>
 
