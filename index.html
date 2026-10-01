@@ -176,6 +176,8 @@ svg.lined{overflow:visible}
 .hfinger .ring{position:absolute;inset:-2px;border-radius:50%;border:2px solid #1b252c;opacity:0}
 .hfinger .say{position:absolute;left:18px;top:-30px;font-size:22px;opacity:0}
 .hfloat{position:fixed;z-index:65;pointer-events:none;width:58px;transform:translate(-50%,-50%) scale(1.1);background:transparent!important;border-color:transparent!important;box-shadow:none!important}
+.board .tapword rect{fill:var(--navy,#1f2a4a)}
+.board .tapword text{fill:#fff;font-family:var(--f-display);font-weight:600;font-size:17px}
 .board .finger circle{transform-box:fill-box;transform-origin:center}
 .board .finger circle.dot{fill:rgba(27,37,44,.22);stroke:#1b252c;stroke-width:2}
 .board .finger circle.ring{fill:none;stroke:#1b252c;stroke-width:2;opacity:0}
@@ -550,7 +552,9 @@ function say(text,rate=.85,onend){
     if(onend){let done=false;const f=()=>{if(!done){done=true;onend()}};u.onend=f;setTimeout(f,Math.max(1800,String(text).length*80/rate))}
     speechSynthesis.speak(u)}catch(e){if(onend)setTimeout(onend,650)}
 }
-const spoken=c=>c.toUpperCase(); // engines read a lone capital as its letter name
+// letter names written out, so the voice never says "capital A" (some voices do for a lone capital letter)
+const LETTER_NAMES={a:"ay",b:"bee",c:"see",d:"dee",e:"ee",f:"eff",g:"jee",h:"aitch",i:"eye",j:"jay",k:"kay",l:"el",m:"em",n:"en",o:"oh",p:"pee",q:"queue",r:"ar",s:"ess",t:"tee",u:"you",v:"vee",w:"double you",x:"ex",y:"why",z:"zed"};
+const spoken=c=>LETTER_NAMES[String(c).toLowerCase()]||c;
 
 /* ---------- tabs, case ---------- */
 const views=["build","order","games","recite"];
@@ -955,6 +959,19 @@ function hintTap(pc){
     dot.animate([{transform:"scale(1)"},{transform:"scale(.8)"},{transform:"scale(1)"}],{duration:240})},t));
   setTimeout(()=>f.remove(),2000);
 }
+// if the finger's hint to turn a piece isn't taken up, the word "tap" (touch screens) or "click" (mouse) appears beside it
+let LAST_PTR="mouse";addEventListener("pointerdown",e=>{LAST_PTR=e.pointerType||"mouse"},true);
+function armTapWord(pc){clearTimeout(pc.tapT);const was={rot:pc.rot,dx:pc.dx,dy:pc.dy,letter:B.letter};
+  pc.tapT=setTimeout(()=>{if(VIEW!=="build"||DEMO||B.solved||pc.placed||B.letter!==was.letter||pc.rot!==was.rot||pc.dx!==was.dx||pc.dy!==was.dy)return;
+    hintTap(pc);showTapWord(pc)},3500)}
+function showTapWord(pc){
+  board.querySelectorAll(".tapword").forEach(x=>x.remove());
+  const word=LAST_PTR==="mouse"?"click":"tap",r=Math.max(pc.p[4]-pc.p[2],pc.p[5]-pc.p[3])/2,x=OX+(pc.cx+pc.dx)*SC,y=Math.max(34,OY+(pc.cy+pc.dy-r)*SC-6);
+  const g=document.createElementNS(NS,"g");g.setAttribute("class","tapword");g.style.pointerEvents="none";
+  g.innerHTML=`<rect x="${x-34}" y="${y-30}" width="68" height="30" rx="15"/><text x="${x}" y="${y-9}" text-anchor="middle">${word}</text>`;
+  board.appendChild(g);g.animate([{opacity:0},{opacity:1,offset:.12},{opacity:1,offset:.85},{opacity:0}],{duration:3000,fill:"forwards"});
+  setTimeout(()=>g.remove(),3050);
+  const re=()=>{g.remove();removeEventListener("pointerdown",re,true)};addEventListener("pointerdown",re,true)}
 const upright=pc=>pc.rot%360===0||(pc.sym&&pc.rot%180===0);
 function inLetterArea(pc){const x=pc.cx+pc.dx,y=pc.cy+pc.dy;return x>-5&&x<135&&y>-5&&y<frameH(B.letter)+5}
 function tryFit(pc,g,wasTap){
@@ -967,7 +984,7 @@ function tryFit(pc,g,wasTap){
   const near=cands.filter(c=>c.d<16).sort((a,b)=>a.d-b.d);
   if(!near.length){if(!wasTap&&!pc.real&&inLetterArea(pc))rejectPiece(pc);return}
   const r=((pc.rot%360)+360)%360,fit=near.find(c=>c.rot===r);
-  if(!fit){if(!wasTap)hintTap(pc);return}
+  if(!fit){if(!wasTap){hintTap(pc);armTapWord(pc)}return}
   fit.s.filled=true;pc.placed=true;pc.rot=fit.rot;pc.dx=fit.dx;pc.dy=fit.dy;g.classList.add("placed");place(g,pc);
   try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
   afterPlace();
@@ -1505,13 +1522,13 @@ setInterval(()=>{ // hesitation: no progress for a while once the learner has st
   if(sec>(LISTEN.on?4:6)){LISTEN.lastProgress=performance.now();reciteEvent("hesitation",{expected:R.seq[R.pos],position:R.pos,seconds:Math.round(sec)})}},1000);
 const COACH={gen:0,active:false,step:null,letter:null,other:null,words:0,askedElse:false,speaking:false,timer:null,seen:store.get("coachseen",{})};
 const Q={
-  words:L=>`Tell me words with the letter ${spoken(L)}.`,
+  words:L=>`Tell me words with the letter ⟨${L}⟩.`,
   else:()=>"Anything else?",
   mind:()=>"What comes to mind when you look at this letter?",
   remind:()=>"Does this letter remind you of something other than the letter? It could be another letter, or a word, or an object that looks like this letter.",
   // the first comparison question names both letters; after that the short form is used
-  similar:(L,O)=>COACH.compared?"Tell me something similar.":`Tell me something similar between ${spoken(L)} and ${spoken(O)}.`,
-  different:(L,O)=>COACH.compared?"Tell me something different.":`Tell me something different between ${spoken(L)} and ${spoken(O)}.`};
+  similar:(L,O)=>COACH.compared?"Tell me something similar.":`Tell me something similar between ⟨${L}⟩ and ⟨${O}⟩.`,
+  different:(L,O)=>COACH.compared?"Tell me something different.":`Tell me something different between ⟨${L}⟩ and ⟨${O}⟩.`};
 const RESTART_LINES=["OK, let's see if that made a difference.","OK, let's see if this is easier now."];
 const FILLERS=new Set(["um","uh","er","erm","hmm","and","the","a","an","like","so","well"]);
 const isNo=t=>{t=t.trim().toLowerCase();return !t||(/\b(no|nope|nah|nothing|none|no more|not really|i don'?t know|dunno|that'?s (it|all)|finished|done)\b/.test(t)&&t.split(/\s+/).length<=5)};
@@ -1519,7 +1536,7 @@ function coachLog(answer){const log=store.get("coachlog",[]);log.push({when:new 
 function coachLetters(){const L=COACH.letter,O=COACH.other;$("coach-letters").innerHTML=pickSVG(L)+(O?`<span class="vs">and</span>${pickSVG(O)}`:"")}
 function coachTimer(){clearTimeout(COACH.timer);const wait={words:12,else:8,remind:12,mind:12,similar:12,different:12}[COACH.step]||10;
   COACH.timer=setTimeout(()=>coachAnswer(""),wait*1000)}
-function coachSay(text,then){COACH.speaking=true;$("coach-q").textContent=text;$("coach-live").textContent="";clearTimeout(COACH.timer);
+function coachSay(text,then){COACH.speaking=true;const shown=text.replace(/⟨(.)⟩/g,"$1");text=text.replace(/⟨(.)⟩/g,(m,c)=>spoken(c));$("coach-q").textContent=shown;$("coach-q").dataset.say=text;$("coach-live").textContent="";clearTimeout(COACH.timer);
   const gen=++COACH.gen;
   say(text,.95,()=>{if(gen!==COACH.gen||!COACH.active)return; // interrupted: the learner has gone back to the alphabet
     COACH.speaking=false;
@@ -1594,7 +1611,7 @@ $("coach-skip").onclick=coachClose;$("coach-x").onclick=coachClose;
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&COACH.active)coachClose()});
 $("r-grid").addEventListener("pointerdown",e=>{if(COACH.active){e.stopPropagation();e.preventDefault();coachClose();COACH.justClosed=true;setTimeout(()=>COACH.justClosed=false,500)}},true);
 $("r-grid").addEventListener("click",e=>{if(COACH.justClosed){e.stopPropagation()}},true);
-$("coach-q").onclick=()=>coachSay($("coach-q").textContent);
+$("coach-q").onclick=()=>coachSay($("coach-q").dataset.say||$("coach-q").textContent);
 // the built-in responses: mistakes and hesitations start the conversation (replace these to change it)
 RECITE_RESPONSES.mistake=info=>{startCoach(info.expected,info.heard);return true};
 RECITE_RESPONSES.hesitation=info=>{startCoach(info.expected);return true};
