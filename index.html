@@ -315,6 +315,7 @@ svg.lined{overflow:visible}
 .coach-x:hover{background:#f9d2e4}
 .coach-letters{display:flex;align-items:center;justify-content:center;gap:10px;height:84px}
 .coach-letters svg{height:84px;width:auto}
+.coach-letters g.art path{fill:var(--solved)}
 .coach-letters .vs{font-family:var(--f-display);font-weight:600;color:var(--muted)}
 .coach-q{margin:0;font-family:var(--f-display);font-weight:600;font-size:18px;text-align:center;cursor:pointer;text-wrap:balance}
 .coach-ans{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
@@ -1372,7 +1373,7 @@ const LISTEN={on:false,rec:null,paused:false,consumed:{},lastProgress:0,hesT:nul
 const LETTER_WORDS={a:"a ay eh ae hey",b:"b be bee bea bi",c:"c see sea si cee",d:"d dee de",e:"e ee he",f:"f ef eff",g:"g gee ji jee",
   h:"h aitch haitch age ach",i:"i eye aye ai",j:"j jay jae",k:"k kay cay okay",l:"l el ell elle",m:"m em emm",n:"n en enn",o:"o oh owe",
   p:"p pee pea pe",q:"q queue cue kew que",r:"r are ar our",s:"s es ess",t:"t tea tee ti",u:"u you yu ewe",v:"v vee ve",
-  w:"w doubleyou doubleu",x:"x ex ecks",y:"y why wye",z:"z zed zee zedd"};
+  w:"w doubleyou doubleu",x:"x ex ecks",y:"y why wye",z:"z zed zee zedd said sed zedd zet"};
 const WORD2LETTER={};Object.entries(LETTER_WORDS).forEach(([l,ws])=>ws.split(" ").forEach(w=>WORD2LETTER[w]=l));
 function heardLetters(text){
   const out=[];
@@ -1489,8 +1490,9 @@ const Q={
   words:L=>`Tell me words with the letter ${spoken(L)}.`,
   else:()=>"Anything else?",
   remind:()=>"Does this letter remind you of something other than the letter? It could be another letter, or a word, or an object that looks like this letter.",
-  similar:(L,O)=>`Tell me something similar between ${spoken(L)} and ${spoken(O)}.`,
-  different:(L,O)=>`Tell me something different between ${spoken(L)} and ${spoken(O)}.`};
+  // the first comparison question names both letters; after that the short form is used
+  similar:(L,O)=>COACH.compared?"Tell me something similar.":`Tell me something similar between ${spoken(L)} and ${spoken(O)}.`,
+  different:(L,O)=>COACH.compared?"Tell me something different.":`Tell me something different between ${spoken(L)} and ${spoken(O)}.`};
 const RESTART_LINES=["OK, let's see if that made a difference.","OK, let's see if this is easier now."];
 const FILLERS=new Set(["um","uh","er","erm","hmm","and","the","a","an","like","so","well"]);
 const isNo=t=>{t=t.trim().toLowerCase();return !t||(/\b(no|nope|nah|nothing|none|no more|not really|i don'?t know|dunno|that'?s (it|all)|finished|done)\b/.test(t)&&t.split(/\s+/).length<=5)};
@@ -1507,12 +1509,22 @@ function coachSay(text,then){COACH.speaking=true;$("coach-q").textContent=text;$
     if(then)then();else coachTimer()})}
 // words that stop the question and go back to the alphabet (none of them appear in the questions)
 const BACK_WORDS=/\b(stop|back|skip|alphabet|enough|never ?mind|carry on|go on|cancel|quit)\b/i;
-function coachAsk(step){COACH.step=step;$("coach-ans").innerHTML="";coachLetters();coachSay(Q[step](COACH.letter,COACH.other))}
-function startCoach(letter){
+function coachAsk(step){COACH.step=step;if(step!=="similar"&&step!=="different")$("coach-ans").innerHTML="";coachLetters();
+  const q=Q[step](COACH.letter,COACH.other);if(step==="similar"||step==="different")COACH.compared=true;coachSay(q)}
+// two letters confused: ask "similar" and "different" in turn; once one has no more answers, keep asking the other until it runs out too
+function compareNext(){
+  if(COACH.simDone&&COACH.difDone)return coachFinish();
+  const next=COACH.step==="similar"?"different":COACH.step==="different"?"similar":"similar";
+  coachAsk((next==="similar"?COACH.simDone:COACH.difDone)?(next==="similar"?"different":"similar"):next)}
+function startCompare(other){COACH.other=CASE==="up"?other.toUpperCase():other.toLowerCase();
+  Object.assign(COACH,{simDone:false,difDone:false,compared:false,step:null});$("coach-ans").innerHTML="";compareNext()}
+function startCoach(letter,heard){
   if(COACH.active||HDEMO)return;
   const k=CASE+letter,times=COACH.seen[k]||0;COACH.seen[k]=times+1;store.set("coachseen",COACH.seen);
   Object.assign(COACH,{active:true,letter,other:null,words:0,askedElse:false});
   $("coach").hidden=false;$("coach-form").hidden=LISTEN.on;$("coach-in").value="";
+  // another letter was said or tapped in its place: show both letters and compare them
+  if(heard&&heard.toLowerCase()!==letter.toLowerCase()&&/^[a-z]$/i.test(heard))return startCompare(heard);
   coachAsk(times===0?"words":"remind");
 }
 function coachAnswer(text){
@@ -1534,12 +1546,13 @@ function coachAnswer(text){
     const want=COACH.letter.toLowerCase(),cand=heardLetters(text).filter(l=>l!==want);
     const single=text.trim().length===1&&/[a-z]/i.test(text)?text.trim().toLowerCase():null;
     const other=single&&single!==want?single:(cand.length===1&&text.split(/\s+/).length<=4?cand[0]:null);
-    if(other){COACH.other=CASE==="up"?other.toUpperCase():other;return coachAsk("similar")}
+    if(other)return startCompare(other);
     return coachFinish();
   }
   if(step==="similar"||step==="different"){
-    if(isNo(text))return coachFinish();
-    coachLog(text);return coachAsk(step==="similar"?"different":"similar");
+    if(isNo(text)){if(step==="similar")COACH.simDone=true;else COACH.difDone=true}
+    else coachLog(text);
+    return compareNext();
   }
 }
 function coachFinish(){clearTimeout(COACH.timer);
@@ -1558,7 +1571,7 @@ $("r-grid").addEventListener("pointerdown",e=>{if(COACH.active){e.stopPropagatio
 $("r-grid").addEventListener("click",e=>{if(COACH.justClosed){e.stopPropagation()}},true);
 $("coach-q").onclick=()=>coachSay($("coach-q").textContent);
 // the built-in responses: mistakes and hesitations start the conversation (replace these to change it)
-RECITE_RESPONSES.mistake=info=>{startCoach(info.expected);return true};
+RECITE_RESPONSES.mistake=info=>{startCoach(info.expected,info.heard);return true};
 RECITE_RESPONSES.hesitation=info=>{startCoach(info.expected);return true};
 if(!SR){$("r-mic").classList.add("unsupported");$("r-mic").title="Listening isn't available in this browser"}
 document.addEventListener("keydown",e=>{if(VIEW==="recite"&&!HDEMO&&(e.key===" "||e.key==="ArrowRight")){e.preventDefault();const t=$("r-grid").children[R.pos];if(t)reciteTap(t)}});
