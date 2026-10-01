@@ -1362,6 +1362,7 @@ function stopListen(){}
    (Chrome, Edge, Safari on a normal web page). Inside the artifact viewer the microphone is
    blocked, so the app says so and tapping carries on as usual. */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const SAFARI=/^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
 const LISTEN={on:false,rec:null,paused:false,consumed:{},lastProgress:0,hesT:null,warned:false};
 // what a speech recogniser may write down for each letter name (UK and US forms, common mishearings)
 const LETTER_WORDS={a:"a ay eh ae hey",b:"b be bee bea bi",c:"c see sea si cee",d:"d dee de",e:"e ee he",f:"f ef eff",g:"g gee ji jee",
@@ -1407,8 +1408,11 @@ function startListening(){
   if(location.protocol==="file:"){showNotice("<b>Listening needs the app to be opened from a web address</b>, not as a file on this device. Put it on a website (or a local server) and open it from there. You can still tap each letter as you say it.");setMic(false);return}
   if(micPolicyBlocked()){micBlockedNotice();setMic(false);return}
   showNotice("");LISTEN.on=true;LISTEN.consumed={};LISTEN.lastProgress=performance.now();setMic(true);
-  const rec=new SR();rec.lang="en-GB";rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=3;LISTEN.rec=rec;
+  const rec=new SR();rec.lang="en-GB";
+  // Safari on a Mac often stops hearing anything in continuous mode, so there it listens one phrase at a time and restarts
+  rec.continuous=!SAFARI;rec.interimResults=true;rec.maxAlternatives=3;LISTEN.rec=rec;
   // every restart begins a fresh list of results, so forget what was counted in the last one
+  ["audiostart","soundstart","speechstart","speechend","audioend"].forEach(ev=>rec.addEventListener(ev,()=>{mlog(ev);if(ev==="soundstart"&&/No sound/.test($("r-notice").textContent))showNotice("")}));
   rec.onstart=()=>{mlog("start");LISTEN.consumed={};setMicState("Listening…","live")};
   rec.onresult=e=>{if(MLOG)try{for(let r=e.resultIndex;r<e.results.length;r++){const x=e.results[r];mlog("result #"+r+(x.isFinal?" final":" interim")+": "+Array.from({length:x.length},(_,i)=>"“"+x[i].transcript+"”").join(" / ")+" → letters "+(heardLetters(x[0].transcript).join("")||"none")+", want "+(R.seq[R.pos]||"-"))}}catch(err){mlog("log error "+err)}
     if(LISTEN.paused||VIEW!=="recite")return;
@@ -1434,19 +1438,22 @@ function startListening(){
         LISTEN.consumed[r]=k+1}
     }};
   rec.onerror=e=>{mlog("error: "+e.error+(e.message?" "+e.message:""));
+    if(e.error==="not-allowed"&&(document.hidden||/not visible/i.test(e.message||""))){LISTEN.away=true;return}
     if(e.error==="not-allowed"||e.error==="service-not-allowed"){LISTEN.on=false;setMic(false);
       // Safari answers "service-not-allowed" when the device's own speech recognition (Dictation/Siri) is switched off
       if(e.error==="service-not-allowed"&&!micPolicyBlocked())showNotice("<b>Speech recognition is switched off on this device.</b> On a Mac, turn on Dictation in System Settings › Keyboard, then reload this page and tap Listen. On an iPhone or iPad, turn on Dictation in Settings › General › Keyboard. You can still tap each letter as you say it.");
       else micBlockedNotice()}
+    else if(e.error==="audio-capture"){showNotice("<b>No sound is reaching the app from the microphone.</b> Check the microphone chosen in System Settings › Sound › Input (or your device's sound settings), then tap Listen again. You can still tap each letter as you say it.")}
     else if(e.error==="network"){showNotice("<b>Listening needs an internet connection</b> in this browser. You can still tap each letter.")}
     else if(e.error!=="no-speech"&&e.error!=="aborted")setMicState("Didn't catch that ("+e.error+")","");
   };
-  rec.onend=()=>{mlog("end");if(LISTEN.on&&!LISTEN.paused){try{rec.start()}catch(err){}}else setMicState("","")};
-  mlog("tap Listen — "+(window.SpeechRecognition?"SpeechRecognition":"webkitSpeechRecognition")+", "+location.protocol+(FRAMED?", in a frame":""));
+  rec.onend=()=>{mlog("end");if(LISTEN.away){setMicState("","");return}if(LISTEN.on&&!LISTEN.paused){try{rec.start()}catch(err){}}else setMicState("","")};
+  mlog("tap Listen — "+(window.SpeechRecognition?"SpeechRecognition":"webkitSpeechRecognition")+(SAFARI?", Safari, one phrase at a time":", continuous")+", "+location.protocol+(FRAMED?", in a frame":""));
   try{rec.start()}catch(err){mlog("start failed: "+err);showNotice("<b>Listening couldn't start.</b> You can still tap each letter.");LISTEN.on=false;setMic(false)}
   clearInterval(LISTEN.hesT);
 
 }
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&LISTEN.away){LISTEN.away=false;if(LISTEN.on&&LISTEN.rec){try{LISTEN.rec.start()}catch(e){}}}});
 function stopListening(){LISTEN.on=false;clearInterval(LISTEN.hesT);try{LISTEN.rec&&LISTEN.rec.abort()}catch(e){}LISTEN.rec=null;setMic(false);setMicState("","")}
 function pauseListening(ms){if(!LISTEN.on)return;LISTEN.paused=true;try{LISTEN.rec.abort()}catch(e){}
   setTimeout(()=>{LISTEN.paused=false;LISTEN.consumed={};if(LISTEN.on){try{LISTEN.rec.start()}catch(e){}}},ms)}
@@ -1600,7 +1607,7 @@ document.querySelectorAll("[data-demo]").forEach(b=>b.onclick=()=>{const v=b.dat
 renderDir();
 $("b-turn").setAttribute("aria-pressed",B.turn);renderShapes();startBuild(B.letter);updateNext();startOrder();renderGameControls();scoreText();startRecite();
 // a link ending in #build, #games, #order or #recite opens that part of the app
-const vh=location.hash.slice(1).toLowerCase(),v0=views.includes(vh)?vh:store.get("view","build");if(views.includes(v0))show(v0);
+const vh=location.hash.toLowerCase().split(/[#&,]/).find(x=>views.includes(x)),v0=vh||store.get("view","build");if(views.includes(v0))show(v0);
 if(VIEW==="build")maybeDemo();else maybeHDemo(VIEW);
 </script>
 
