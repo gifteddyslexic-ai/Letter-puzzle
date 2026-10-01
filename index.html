@@ -553,7 +553,7 @@ function say(text,rate=.85,onend){
     speechSynthesis.speak(u)}catch(e){if(onend)setTimeout(onend,650)}
 }
 // letter names written out, so the voice never says "capital A" (some voices do for a lone capital letter)
-const LETTER_NAMES={a:"ay",b:"bee",c:"see",d:"dee",e:"ee",f:"eff",g:"jee",h:"aitch",i:"eye",j:"jay",k:"kay",l:"el",m:"em",n:"en",o:"oh",p:"pee",q:"queue",r:"ar",s:"ess",t:"tee",u:"you",v:"vee",w:"double you",x:"ex",y:"why",z:"zed"};
+const LETTER_NAMES={a:"a",b:"bee",c:"see",d:"dee",e:"ee",f:"eff",g:"jee",h:"aitch",i:"eye",j:"jay",k:"kay",l:"el",m:"em",n:"en",o:"oh",p:"pee",q:"queue",r:"ar",s:"ess",t:"tee",u:"you",v:"vee",w:"double you",x:"ex",y:"why",z:"zed"};
 const spoken=c=>LETTER_NAMES[String(c).toLowerCase()]||c;
 
 /* ---------- tabs, case ---------- */
