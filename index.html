@@ -325,6 +325,11 @@ svg.lined{overflow:visible}
 .coach-type input{flex:1;min-width:0;font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}
 .coach-btns{display:flex;gap:8px}
 .coach-btns .btn{flex:1;font-size:14px}
+#r-pause svg{fill:currentColor;stroke:none}
+#r-pause[aria-pressed="true"]{background:var(--navy,#1f2a4a);color:#fff;border-color:transparent}
+#view-recite.paused #r-grid{opacity:.25;filter:grayscale(1)}
+.r-resume{position:absolute;left:50%;top:55%;transform:translate(-50%,-50%);width:96px;height:96px;border-radius:50%;border:0;background:var(--navy,#1f2a4a);color:#fff;box-shadow:0 10px 30px rgba(20,30,60,.3);z-index:15;cursor:pointer}
+.r-resume svg{width:52px;height:52px;fill:#fff;margin-left:6px}
 .microw{display:flex;align-items:center;justify-content:center;gap:10px;flex:none}
 .mic{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--pale-line);background:var(--pale);color:var(--pale-ink);border-radius:999px;padding:6px 14px;font-family:var(--f-display);font-weight:600;font-size:14px;min-height:36px}
 .mic svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
@@ -433,11 +438,12 @@ svg.lined{overflow:visible}
     <section class="view" id="view-recite" hidden>
       <h2 class="sr" id="r-title">Say the alphabet</h2>
       <div class="lvbar" id="r-help" role="tablist" aria-label="How many letters to show"></div>
-      <div class="microw"><button class="mic" id="r-mic" aria-pressed="false" title="Say the letters out loud and the app will listen"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Listen</span></button><span class="micstate" id="r-micstate" aria-live="polite"></span></div>
+      <div class="microw"><button class="mic" id="r-mic" aria-pressed="false" title="Say the letters out loud and the app will listen"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Listen</span></button><button class="mic" id="r-pause" aria-pressed="false" title="Pause" aria-label="Pause"><svg viewBox="0 0 24 24"><rect x="7" y="5" width="3.5" height="14" rx="1"/><rect x="13.5" y="5" width="3.5" height="14" rx="1"/></svg></button><span class="micstate" id="r-micstate" aria-live="polite"></span></div>
       <p class="notice" id="r-notice" hidden></p>
       <pre class="mlog" id="r-log" hidden></pre>
       <span id="r-ctx" hidden></span><span id="r-progress" hidden></span>
       <div class="grid fit" id="r-grid"></div>
+      <button class="r-resume" id="r-resume" hidden aria-label="Carry on"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
       <p class="status" id="r-status"></p>
       <div class="coach" id="coach" hidden role="dialog" aria-live="polite">
         <button class="coach-x" id="coach-x" aria-label="Back to the alphabet" title="Back to the alphabet">&times;</button>
@@ -594,7 +600,7 @@ function renderPbar(){renderTabBars();const bar=$("pbar");if(!bar)return;try{con
   bar.querySelectorAll(".pseg").forEach(b=>{b.onclick=()=>{acts[+b.dataset.k]();if(lastTouch)showTip(b,1300)};
     b.onpointerenter=e=>{if(e.pointerType==="mouse")showTip(b)};b.onpointerleave=()=>hideTip();b.onfocus=()=>showTip(b);b.onblur=hideTip;
     b.onpointerdown=e=>{lastTouch=e.pointerType!=="mouse"}})}catch(e){/* not ready yet during start-up */}}
-function show(v){const changed=VIEW!==v;VIEW=v;if(v!=="recite"&&typeof COACH!=="undefined"&&COACH.active)coachClose();if(v!=="recite"&&typeof LISTEN!=="undefined"&&LISTEN.on)stopListening();$("tab-games").setAttribute("aria-selected",v==="games"||v==="order");setTimeout(renderTabBars,0);setTimeout(renderPbar,0);if(v!=="games")clearTimeout(G.hintT);closeChoices();$("opts").hidden=v==="games"||v==="recite";renderDir();closeSheet();if(v!=="build")stopDemo(true);stopHDemo();views.forEach(x=>{$("view-"+x).hidden=x!==v;(x!=="order")&&$("tab-"+x).setAttribute("aria-selected",x===v||(x==="games"&&v==="order"))});store.set("view",v);
+function show(v){const changed=VIEW!==v;VIEW=v;if(v!=="recite"&&typeof R!=="undefined"&&R.paused){R.paused=false;$("view-recite").classList.remove("paused");$("r-resume").hidden=true;$("r-pause").setAttribute("aria-pressed","false")}if(v==="recite"&&changed)setTimeout(()=>typeof autoListen==="function"&&autoListen(),900);if(v!=="recite"&&typeof COACH!=="undefined"&&COACH.active)coachClose();if(v!=="recite"&&typeof LISTEN!=="undefined"&&LISTEN.on)stopListening();$("tab-games").setAttribute("aria-selected",v==="games"||v==="order");setTimeout(renderTabBars,0);setTimeout(renderPbar,0);if(v!=="games")clearTimeout(G.hintT);closeChoices();$("opts").hidden=v==="games"||v==="recite";renderDir();closeSheet();if(v!=="build")stopDemo(true);stopHDemo();views.forEach(x=>{$("view-"+x).hidden=x!==v;(x!=="order")&&$("tab-"+x).setAttribute("aria-selected",x===v||(x==="games"&&v==="order"))});store.set("view",v);
   if(changed){const el=$("view-"+v);el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter")}
   if(v==="build")requestAnimationFrame(()=>{centerPick();fitPicker()});
   if(v==="build"&&changed&&B.solved)$("b-next").onclick();
@@ -1416,10 +1422,11 @@ function startListening(){
   rec.continuous=!/phrase/i.test(location.hash);rec.interimResults=true;rec.maxAlternatives=3;LISTEN.rec=rec;
   // every restart begins a fresh list of results, so forget what was counted in the last one
   ["audiostart","soundstart","speechstart","speechend","audioend"].forEach(ev=>rec.addEventListener(ev,()=>{mlog(ev);if(ev==="soundstart"){LISTEN.capErr=0;if(/No sound/.test($("r-notice").textContent))showNotice("")}}));
-  rec.onstart=()=>{mlog("start");if(LISTEN.capErr===undefined)LISTEN.capErr=0;LISTEN.consumed={};setMicState("Listening…","live")};
+  rec.onstart=()=>{mlog("start");LISTEN.auto=false;if(LISTEN.capErr===undefined)LISTEN.capErr=0;LISTEN.consumed={};setMicState("Listening…","live")};
   rec.onresult=e=>{if(MLOG)try{for(let r=e.resultIndex;r<e.results.length;r++){const x=e.results[r];mlog("result #"+r+(x.isFinal?" final":" interim")+": "+Array.from({length:x.length},(_,i)=>"“"+x[i].transcript+"”").join(" / ")+" → letters "+(heardLetters(x[0].transcript).join("")||"none")+", want "+(R.seq[R.pos]||"-"))}}catch(err){mlog("log error "+err)}
     LISTEN.capErr=0;if(/No sound/.test($("r-notice").textContent))showNotice("");
-    if(LISTEN.paused||VIEW!=="recite")return;
+    if(LISTEN.paused||VIEW!=="recite"||HDEMO)return;
+    for(let r=e.resultIndex;r<e.results.length;r++){if(/\bpause\b/i.test(e.results[r][0].transcript)){pauseRecite();return}}
     if(COACH.active){for(let r=e.resultIndex;r<e.results.length;r++){const res=e.results[r];
         if(BACK_WORDS.test(res[0].transcript)){coachClose();return}
         if(COACH.speaking)continue;
@@ -1445,6 +1452,7 @@ function startListening(){
     }};
   rec.onerror=e=>{mlog("error: "+e.error+(e.message?" "+e.message:""));
     if(e.error==="not-allowed"&&(document.hidden||/not visible/i.test(e.message||""))){LISTEN.away=true;return}
+    if((e.error==="not-allowed"||e.error==="service-not-allowed")&&LISTEN.auto){LISTEN.on=false;setMic(false);setMicState("","");return}
     if(e.error==="not-allowed"||e.error==="service-not-allowed"){LISTEN.on=false;setMic(false);
       // Safari answers "service-not-allowed" when the device's own speech recognition (Dictation/Siri) is switched off
       if(e.error==="service-not-allowed"&&!micPolicyBlocked())showNotice("<b>Speech recognition is switched off on this device.</b> On a Mac, turn on Dictation in System Settings › Keyboard, then reload this page and tap Listen. On an iPhone or iPad, turn on Dictation in Settings › General › Keyboard. You can still tap each letter as you say it.");
@@ -1463,6 +1471,16 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&LISTEN.aw
 function stopListening(){LISTEN.on=false;clearInterval(LISTEN.hesT);try{LISTEN.rec&&LISTEN.rec.abort()}catch(e){}LISTEN.rec=null;setMic(false);setMicState("","")}
 function pauseListening(ms){if(!LISTEN.on)return;LISTEN.paused=true;try{LISTEN.rec.abort()}catch(e){}
   setTimeout(()=>{LISTEN.paused=false;LISTEN.consumed={};if(LISTEN.on){try{LISTEN.rec.start()}catch(e){}}},ms)}
+function pauseRecite(){if(R.paused||VIEW!=="recite")return;R.paused=true;R.wasListening=LISTEN.on;
+  if(COACH.active)coachClose();if(LISTEN.on)stopListening();try{speechSynthesis.cancel()}catch(e){}
+  $("view-recite").classList.add("paused");$("r-resume").hidden=false;$("r-pause").setAttribute("aria-pressed","true")}
+function resumeRecite(){if(!R.paused)return;R.paused=false;$("view-recite").classList.remove("paused");$("r-resume").hidden=true;
+  $("r-pause").setAttribute("aria-pressed","false");LISTEN.lastProgress=performance.now();if(R.wasListening)startListening()}
+$("r-pause").onclick=()=>R.paused?resumeRecite():pauseRecite();$("r-resume").onclick=resumeRecite;
+$("r-grid").addEventListener("pointerdown",e=>{if(R.paused){e.stopPropagation();e.preventDefault();resumeRecite();COACH.justClosed=true;setTimeout(()=>COACH.justClosed=false,500)}},true);
+document.addEventListener("keydown",e=>{if(VIEW==="recite"&&(e.key==="p"||e.key==="P")&&!/input/i.test(document.activeElement.tagName)){R.paused?resumeRecite():pauseRecite()}});
+// listening is on by default in Recite (tapping Listen off is remembered)
+function autoListen(){if(VIEW==="recite"&&!HDEMO&&!R.paused&&!LISTEN.on&&SR&&location.protocol!=="file:"&&store.get("listen",true)!==false){LISTEN.auto=true;startListening()}}
 function setMic(on){$("r-mic").setAttribute("aria-pressed",on);$("r-mic").querySelector("span").textContent=on?"Listening":"Listen"}
 // with #debug: a Test microphone button checks which microphone the browser uses and whether any sound reaches it (2 seconds)
 async function micCheck(){
@@ -1475,20 +1493,21 @@ async function micCheck(){
     await new Promise(res=>{const f=()=>{an.getFloatTimeDomainData(buf);for(const v of buf)peak=Math.max(peak,Math.abs(v));performance.now()-t0<2000?requestAnimationFrame(f):res()};f()});
     mlog("mic check: loudest sound "+Math.round(peak*100)+"%"+(peak<.01?" — silence: this microphone hears nothing":""));ac.close()}catch(e){mlog("mic check: level failed "+e)}
   st.getTracks().forEach(t=>t.stop());mlog("mic check done — now tap Listen")}
-$("r-mic").onclick=()=>{if(LISTEN.on)stopListening();else startListening()};
+$("r-mic").onclick=()=>{LISTEN.auto=false;if(R.paused)resumeRecite();if(LISTEN.on){stopListening();store.set("listen",false)}else{store.set("listen",true);startListening()}};
 if(MLOG){const b=document.createElement("button");b.className="chip";b.textContent="Test microphone";b.style.margin="0 12px";
   b.onclick=async()=>{if(LISTEN.on)stopListening();b.disabled=true;await micCheck();b.disabled=false};$("r-log").before(b);mlog("debug on")}
 /* ---------- Recite: talking about a tricky letter ----------
    A scripted conversation (no AI needed). Steps:
    words → (anything else?) → restart;  the same letter again → remind → similar ⇄ different → restart. */
 setInterval(()=>{ // hesitation: no progress for a while once the learner has started
-  if(VIEW!=="recite"||HDEMO||COACH.active||LISTEN.paused||R.pos===0||R.pos>=R.seq.length)return;
+  if(VIEW!=="recite"||HDEMO||R.paused||COACH.active||LISTEN.paused||R.pos===0||R.pos>=R.seq.length)return;
   const sec=(performance.now()-LISTEN.lastProgress)/1000;
-  if(sec>(LISTEN.on?6:8)){LISTEN.lastProgress=performance.now();reciteEvent("hesitation",{expected:R.seq[R.pos],position:R.pos,seconds:Math.round(sec)})}},1000);
+  if(sec>(LISTEN.on?4:6)){LISTEN.lastProgress=performance.now();reciteEvent("hesitation",{expected:R.seq[R.pos],position:R.pos,seconds:Math.round(sec)})}},1000);
 const COACH={gen:0,active:false,step:null,letter:null,other:null,words:0,askedElse:false,speaking:false,timer:null,seen:store.get("coachseen",{})};
 const Q={
   words:L=>`Tell me words with the letter ${spoken(L)}.`,
   else:()=>"Anything else?",
+  mind:()=>"What comes to mind when you look at this letter?",
   remind:()=>"Does this letter remind you of something other than the letter? It could be another letter, or a word, or an object that looks like this letter.",
   // the first comparison question names both letters; after that the short form is used
   similar:(L,O)=>COACH.compared?"Tell me something similar.":`Tell me something similar between ${spoken(L)} and ${spoken(O)}.`,
@@ -1498,7 +1517,7 @@ const FILLERS=new Set(["um","uh","er","erm","hmm","and","the","a","an","like","s
 const isNo=t=>{t=t.trim().toLowerCase();return !t||(/\b(no|nope|nah|nothing|none|no more|not really|i don'?t know|dunno|that'?s (it|all)|finished|done)\b/.test(t)&&t.split(/\s+/).length<=5)};
 function coachLog(answer){const log=store.get("coachlog",[]);log.push({when:new Date().toISOString(),letter:COACH.letter,other:COACH.other,step:COACH.step,answer});store.set("coachlog",log.slice(-500))}
 function coachLetters(){const L=COACH.letter,O=COACH.other;$("coach-letters").innerHTML=pickSVG(L)+(O?`<span class="vs">and</span>${pickSVG(O)}`:"")}
-function coachTimer(){clearTimeout(COACH.timer);const wait={words:12,else:8,remind:12,similar:12,different:12}[COACH.step]||10;
+function coachTimer(){clearTimeout(COACH.timer);const wait={words:12,else:8,remind:12,mind:12,similar:12,different:12}[COACH.step]||10;
   COACH.timer=setTimeout(()=>coachAnswer(""),wait*1000)}
 function coachSay(text,then){COACH.speaking=true;$("coach-q").textContent=text;$("coach-live").textContent="";clearTimeout(COACH.timer);
   const gen=++COACH.gen;
@@ -1525,7 +1544,9 @@ function startCoach(letter,heard){
   $("coach").hidden=false;$("coach-form").hidden=LISTEN.on;$("coach-in").value="";
   // another letter was said or tapped in its place: show both letters and compare them
   if(heard&&heard.toLowerCase()!==letter.toLowerCase()&&/^[a-z]$/i.test(heard))return startCompare(heard);
-  coachAsk(times===0?"words":"remind");
+  const last=store.get("coachlast",{}),opts=["words","remind","mind"].filter(q=>q!==last[k]),first=opts[rand(opts.length)];
+  last[k]=first;store.set("coachlast",last);
+  coachAsk(first);
 }
 function coachAnswer(text){
   if(!COACH.active||COACH.speaking)return;clearTimeout(COACH.timer);text=(text||"").trim();$("coach-live").textContent="";
@@ -1539,14 +1560,18 @@ function coachAnswer(text){
     if(COACH.words===1&&!COACH.askedElse){COACH.askedElse=true;return coachAsk("else")}
     return coachFinish();
   }
-  if(step==="remind"){
+  if(step==="remind"||step==="mind"){
     if(isNo(text))return coachFinish();
     coachLog(text);
     // is the answer another letter? ("b", "bee", "the letter d" …)
-    const want=COACH.letter.toLowerCase(),cand=heardLetters(text).filter(l=>l!==want);
-    const single=text.trim().length===1&&/[a-z]/i.test(text)?text.trim().toLowerCase():null;
-    const other=single&&single!==want?single:(cand.length===1&&text.split(/\s+/).length<=4?cand[0]:null);
+    // only an answer that is just a letter counts ("b", "bee", "the letter d", "it looks like a q"); "a drum" is a word, not the letter A
+    const want=COACH.letter.toLowerCase(),clean=text.toLowerCase().replace(/[^a-z\s]/g," ").trim();
+    const core=clean.split(/\s+/).length===1?clean:clean.replace(/\b(it|it's|its|is|looks|look|like|the|letter|a|an|maybe|reminds|me|of|um|er)\b/g," ").trim();
+    const hl=core&&core.split(/\s+/).length===1?heardLetters(core):[];
+    const other=hl.length===1&&hl[0]!==want?hl[0]:null;
     if(other)return startCompare(other);
+    // "what comes to mind": one answer is followed by "Anything else?"
+    if(step==="mind"&&!COACH.askedElse){COACH.askedElse=true;COACH.words=Math.max(1,COACH.words);return coachAsk("else")}
     return coachFinish();
   }
   if(step==="similar"||step==="different"){
@@ -1583,6 +1608,7 @@ function maybeHDemo(v){if(!HSEEN[hkey(v)])setTimeout(()=>{if(VIEW===v&&!HDEMO&&!
 function stopHDemo(){if(HDEMO)HDEMO.stop=true}
 async function runHDemo(v){
   if(HDEMO||DEMO)return;const tok={stop:false};HDEMO=tok;const key=hkey(v);
+  if(v==="recite"){if(R.paused)resumeRecite();if(LISTEN.on)stopListening()} // the demo speaks letters: don't listen to it
   const speed=matchMedia("(prefers-reduced-motion: reduce)").matches?.35:1;
   $("hdemo").hidden=false;
   const f=document.createElement("div");f.className="hfinger";f.innerHTML='<span class="ring"></span><span class="say">💬</span>';document.body.appendChild(f);
@@ -1640,7 +1666,7 @@ async function runHDemo(v){
     f.remove();document.querySelectorAll(".hfloat").forEach(x=>x.remove());$("hdemo").hidden=true;HDEMO=null;
     if(v==="order")startOrder();
     if(v==="games"){Object.assign(G,saved);G.cur=null;newRound()}
-    if(v==="recite")startRecite();
+    if(v==="recite"){startRecite();setTimeout(autoListen,300)}
   }
 }
 $("hdemo-skip").onclick=stopHDemo;
