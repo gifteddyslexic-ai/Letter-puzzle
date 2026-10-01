@@ -59,6 +59,8 @@ button:focus-visible,.tile:focus-visible{outline:3px solid var(--focus);outline-
 .dirbtn .arr.dots{fill:var(--ink);stroke:none}
 #o-title{font-size:min(21px,calc((100vw - 44px) / 17));flex:1;min-width:0;text-align:center;white-space:nowrap;cursor:pointer}
 @media (min-width:900px){#o-title{font-size:22px}}
+@keyframes nextnudge{0%,100%{box-shadow:0 0 0 0 rgba(232,74,143,0)}50%{box-shadow:0 0 0 6px rgba(232,74,143,.55)}}
+.next-nudge{animation:nextnudge .65s ease-in-out 4;border-radius:10px}
 .dirbtn.flip-in{animation:dirflip .35s ease}
 @keyframes dirflip{0%{transform:scaleX(.2)}100%{transform:none}}
 .brand{display:flex;align-items:center;gap:2px;min-width:0}
@@ -565,8 +567,13 @@ const PB_SECTIONS=[
   {v:"games",h:205,levels:()=>[0,1].map(d=>({name:"Order "+dirLabels()[d],f:ODONE[CASE+d]?1:0,cur:VIEW==="order"&&DIR===d,go:()=>{show("order");if(DIR!==d)setDir(d)}})).concat(["missing","swap","flip"].flatMap((t,ti)=>[0,1,2].map(k=>{const lv=G.lv[t]||0;
     return {name:TYPES[ti][1]+" level "+(k+1),f:gLevelF(t,k),cur:VIEW==="games"&&TYPES[G.type][0]===t&&lv===k,
       go:()=>{show("games");G.type=ti;G.lv[t]=k;G.run[t]=0;store.set("glv",G.lv);store.set("grun",G.run);renderGameControls();newRound()}}})))},
-  {v:"recite",h:330,levels:()=>HELP.map((hl,k)=>({name:"Recite: "+hl,f:RDONE[CASE+k]?1:0,cur:VIEW==="recite"&&R.help===k,go:()=>{show("recite");if(R.help!==k){R.help=k;store.set("rhelp",k);startRecite()}}}))}];
+  {v:"recite",h:330,levels:()=>HELP.map((hl,k)=>({name:"Recite: "+hl,f:rFrac(k),cur:VIEW==="recite"&&R.help===k,go:()=>{show("recite");if(R.help!==k){R.help=k;store.set("rhelp",k);startRecite()}}}))}];
 const ODONE=store.get("odone",{}),RDONE=store.get("rdone",{}),GDONE=store.get("gdone",{});
+// every Recite level runs through the same four parts in order
+const RSTEPS=[["up",0],["up",1],["low",0],["low",1]];
+const rKey=(k,c,d)=>"s"+k+c+d;
+const rStepDone=(k,c,d)=>!!(RDONE[rKey(k,c,d)]||(d===0&&RDONE[c+k])); // older saves only knew the case
+const rFrac=k=>RSTEPS.filter(([c,d])=>rStepDone(k,c,d)).length/RSTEPS.length;
 // progress of one game level: complete once three good rounds were played there, otherwise the current run
 const gLevelF=(t,k)=>GDONE[t+k]?1:((G.lv[t]||0)===k?Math.min(.99,(G.run[t]||0)/3):0);
 // label that pops up above a progress-bar block (above the bar, so it never covers the tab bar)
@@ -594,7 +601,7 @@ function renderTabBars(){try{
   games.push({name:"Mixed",f:(games[1].f+games[2].f+games[3].f)/3,c:"hsl(205 85% 34%)",cur:inGames&&G.type===3});
   const pickGame=i=>{if(i===0){show("order");return}const ti=i-1;if(VIEW!=="games")show("games");G.type=ti;renderGameControls();newRound();maybeHDemo("games")};
   lvBar($("g-types"),games,pickGame);lvBar($("o-types"),games,pickGame);
-  lvBar($("r-help"),HELP.map((h,k)=>({name:"Recite: "+h,f:RDONE[CASE+k]?1:0,c:`hsl(330 85% ${62-k*8}%)`,cur:R.help===k})),k=>{R.help=k;store.set("rhelp",k);startRecite()});
+  lvBar($("r-help"),HELP.map((h,k)=>({name:"Recite: "+h,f:rFrac(k),c:`hsl(330 85% ${62-k*8}%)`,cur:R.help===k})),k=>{R.help=k;store.set("rhelp",k);startRecite()});
   lvBar($("b-tabs"),LEVELS.map((L,i)=>({name:`Build ${i+1}: ${L.t}`,f:countDone(i+1)/26,c:`hsl(150 75% ${56-i*6}%)`,cur:B.level===i+1})),i=>setBuildLevel(i+1));
 }catch(e){}}
 function renderPbar(){renderTabBars();const bar=$("pbar");if(!bar)return;try{const acts=[];
@@ -720,6 +727,32 @@ function twin180(p,q){
   for(let n=3;n<A.length;n+=4){const a=A[n]>128,b=Bm[n]>128;if(a&&b)i++;if(a||b)u++}
   const r=u>0&&i/u>0.94;_tw.set(k,r);return r;
 }
+// True when two pieces are mirror images top-to-bottom (the two ends of C): the same shape flipped over
+const _tm=new Map();
+function twinMirror(p,q){
+  if(p===q||p[0]!==q[0]||p[6]===q[6])return false;
+  const pw=p[4]-p[2],ph=p[5]-p[3],qw=q[4]-q[2],qh=q[5]-q[3];
+  if(Math.abs(pw-qw)>3||Math.abs(ph-qh)>3)return false;
+  // only pieces stacked one above the other, like the ends of C (not left/right pairs such as the slants of M)
+  if(Math.abs(p[2]-q[2])>4||Math.abs(p[4]-q[4])>4)return false;
+  const k=p[1].length+":"+p[2]+","+p[3]+"|"+q[1].length+":"+q[2]+","+q[3];if(_tm.has(k))return _tm.get(k);
+  const S=2,w=Math.ceil(Math.max(pw,qw))+6,h=Math.ceil(Math.max(ph,qh))+6,W=w*S,H=h*S;_twc.width=W;_twc.height=H;const x=_twc.getContext("2d");
+  const mask=(pc,fx,fy)=>{x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,W,H);x.setTransform(S,0,0,S,0,0);x.translate(w/2,h/2);x.scale(fx,fy);
+    x.translate(-(pc[2]+pc[4])/2,-(pc[3]+pc[5])/2);x.fill(new Path2D(pc[1]));return x.getImageData(0,0,W,H).data};
+  const Bm=mask(q,1,1);let r=false;
+  for(const [fx,fy] of [[1,-1]]){const A=mask(p,fx,fy);let i=0,u=0;
+    for(let n=3;n<A.length;n+=4){const a=A[n]>128,b=Bm[n]>128;if(a&&b)i++;if(a||b)u++}
+    if(u>0&&i/u>0.94){r=true;break}}
+  _tm.set(k,r);return r;
+}
+// a mirror-image piece dropped in its twin's place takes on the twin's shape; the twin takes on the piece's shape
+function swapShapes(a,b){
+  const ga=a.cx+a.dx,gay=a.cy+a.dy,gb=b.cx+b.dx,gby=b.cy+b.dy;
+  for(const f of ["p","key","x0","y0","cx","cy","sym","alt","mir","i"]){const t=a[f];a[f]=b[f];b[f]=t}
+  a.dx=ga-a.cx;a.dy=gay-a.cy;b.dx=gb-b.cx;b.dy=gby-b.cy;
+  for(const pc of [a,b]){const pad=5,path=pc.g.querySelector("path"),hit=pc.g.querySelector(".hit");path.setAttribute("d",pc.p[1]);
+    if(hit){hit.setAttribute("x",pc.p[2]-pad);hit.setAttribute("y",pc.p[3]-pad);hit.setAttribute("width",pc.p[4]-pc.p[2]+pad*2);hit.setAttribute("height",pc.p[5]-pc.p[3]+pad*2)}
+    place(pc.g,pc)}}
 function pickDistractors(c,k){
   const keys=new Set(glyph(c).map(p=>p[6])),pool=[];
   const own=glyph(c);ABC().forEach(o=>{if(o===c)return;glyph(o).forEach(p=>{if(!keys.has(p[6])&&!pool.some(q=>q[6]===p[6])&&!own.some(q=>twin180(p,q)))pool.push(p)})});
@@ -741,10 +774,11 @@ function startBuild(c,fromDemo){
     let tx=-50+colW*(col+.5)+(Math.random()-.5)*colW*.25;
     const ty=(LINE-OY)/SC+(rows===2?52+r*84:55)+(Math.random()-.5)*8;
         const alt=new Set(own.map((q,j)=>o.real&&twin180(p,q)?j:-1).filter(j=>j>=0));
+    const mir=new Set(own.map((q,j)=>o.real&&twinMirror(p,q)?j:-1).filter(j=>j>=0));
     let rot=0;if(B.turn){const opts=[45,90,135,180,225,270,315].filter(a=>!(alt.size&&a===180));rot=opts[rand(opts.length)]}
     {const r=rot*Math.PI/180,hw=Math.abs((p[4]-p[2])/2*Math.cos(r))+Math.abs((p[5]-p[3])/2*Math.sin(r));
      tx=hw>110?65:Math.max(-40+hw,Math.min(170-hw,tx))}
-    return {i:o.i,real:o.real,p,key:p[6],x0:p[2],y0:p[3],cx,cy,dx:tx-cx,dy:ty-cy,hx:tx-cx,hy:ty-cy,rot,placed:false,sym:p[7],alt};
+    return {i:o.i,real:o.real,p,key:p[6],x0:p[2],y0:p[3],cx,cy,dx:tx-cx,dy:ty-cy,hx:tx-cx,hy:ty-cy,rot,placed:false,sym:p[7],alt,mir};
   });
   B.solved=false;
   setBStatus("");
@@ -979,13 +1013,19 @@ function tryFit(pc,g,wasTap){
   const cands=[];
   B.slots.forEach((s,j)=>{if(s.filled)return;
     if(s.key===pc.key)cands.push({s,rot:0,dx:s.x0-pc.x0,dy:s.y0-pc.y0});
-    if(pc.alt&&pc.alt.has(j))cands.push({s,rot:180,dx:(s.x0+s.x1)/2-pc.cx,dy:(s.y0+s.y1)/2-pc.cy})});
+    if(pc.alt&&pc.alt.has(j))cands.push({s,rot:180,dx:(s.x0+s.x1)/2-pc.cx,dy:(s.y0+s.y1)/2-pc.cy});
+    // its mirror twin's place: accepted the right way up or half a turn round
+    if(pc.mir&&pc.mir.has(j))[0,180].forEach(rot=>cands.push({s,rot,mirror:true,dx:(s.x0+s.x1)/2-pc.cx,dy:(s.y0+s.y1)/2-pc.cy}))});
   cands.forEach(c=>c.d=Math.hypot(pc.dx-c.dx,pc.dy-c.dy));
   const near=cands.filter(c=>c.d<16).sort((a,b)=>a.d-b.d);
   if(!near.length){if(!wasTap&&!pc.real&&inLetterArea(pc))rejectPiece(pc);return}
   const r=((pc.rot%360)+360)%360,fit=near.find(c=>c.rot===r);
   if(!fit){if(!wasTap){hintTap(pc);armTapWord(pc)}return}
-  fit.s.filled=true;pc.placed=true;pc.rot=fit.rot;pc.dx=fit.dx;pc.dy=fit.dy;g.classList.add("placed");place(g,pc);
+  if(fit.mirror){const twin=B.pieces.find(o=>o.real&&!o.placed&&o!==pc&&o.key===fit.s.key);
+    if(twin)swapShapes(pc,twin);else{pc.p=glyph(B.letter)[fit.s.i];pc.key=fit.s.key;pc.x0=pc.p[2];pc.y0=pc.p[3];pc.g.querySelector("path").setAttribute("d",pc.p[1])}
+    pc.rot=0;pc.dx=fit.s.x0-pc.x0;pc.dy=fit.s.y0-pc.y0;pc.cx=(pc.p[2]+pc.p[4])/2;pc.cy=(pc.p[3]+pc.p[5])/2}
+  else{pc.rot=fit.rot;pc.dx=fit.dx;pc.dy=fit.dy}
+  fit.s.filled=true;pc.placed=true;g.classList.add("placed");place(g,pc);
   try{navigator.vibrate&&navigator.vibrate(12)}catch(e){}
   afterPlace();
 }
@@ -1376,14 +1416,34 @@ function reciteTap(t,quiet){
   if(!quiet)say(spoken(c),1);try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
   reciteEvent("correct",{expected:c,position:i});
   R.pos++;const n=$("r-grid").children[R.pos];if(n)n.classList.add("now");
-  if(R.pos>=R.seq.length&&!HDEMO){RDONE[CASE+R.help]=true;store.set("rdone",RDONE);renderPbar();
+  if(R.pos>=R.seq.length&&!HDEMO){RDONE[rKey(R.help,CASE,DIR)]=true;store.set("rdone",RDONE);renderPbar();renderTabBars();
     $("r-status").innerHTML=`<span class="cheer" role="img" aria-label="3 stars"><span>★</span><span>★</span><span>★</span></span>`;
     burstIn($("r-grid"),["#43b17c","#f4a54b","#4aabe3","#e84a8f","#ffe14f","#7a398e"]);
-    pauseListening(3800);setTimeout(()=>say(pickPraise(3),.95),600);
-    setTimeout(()=>{if(VIEW==="recite"&&R.pos>=R.seq.length)startRecite()},4000);
+    const nx=reciteNext();pauseListening(nx?6000:3800);
+    setTimeout(()=>say(pickPraise(3),.95,()=>{if(nx&&VIEW==="recite"&&R.pos>=R.seq.length)announceNext(nx)}),600);
+    if(!nx)setTimeout(()=>{if(VIEW==="recite"&&R.pos>=R.seq.length)startRecite()},4000);
   }
 }
 function stopListen(){}
+// after a finished alphabet: the next part of this level (A…Z → Z…A → a…z → z…a), then the next level from A…Z
+function reciteNext(){
+  const i=RSTEPS.findIndex(([c,d])=>c===CASE&&d===DIR);
+  for(let j=1;j<=RSTEPS.length;j++){const [c,d]=RSTEPS[(i+j)%RSTEPS.length];if(!rStepDone(R.help,c,d))return{k:R.help,c,d}}
+  if(R.help<HELP.length-1)return{k:R.help+1,c:"up",d:0};
+  return null}
+const NEXT_SAY={back:"Now say it backwards.",fwd:"Now say it forwards.",low:"Now the lowercase letters.",up:"Now the capital letters.",
+  1:"Now with some letters hidden.",2:"Now with most letters hidden.",3:"Now with all the letters hidden."};
+function announceNext(nx){
+  const lvl=nx.k!==R.help,cas=nx.c!==CASE,dir=nx.d!==DIR;
+  const text=lvl?NEXT_SAY[nx.k]:cas?NEXT_SAY[nx.c]+(dir&&nx.d?" Backwards.":""):NEXT_SAY[nx.d?"back":"fwd"];
+  // point at what changes: the level bar, the ABC/abc switch or the A…Z switch
+  const el=lvl?$("r-help").children[nx.k]:cas?$(nx.c==="up"?"case-up":"case-low"):$("dir");
+  if(el){el.classList.remove("next-nudge");void el.offsetWidth;el.classList.add("next-nudge");setTimeout(()=>el.classList.remove("next-nudge"),2600)}
+  say(text,.95,()=>setTimeout(()=>{if(VIEW!=="recite"||R.pos<R.seq.length)return;
+    if(lvl){R.help=nx.k;store.set("rhelp",nx.k)}
+    if(cas){CASE=nx.c;store.set("case",nx.c);renderCase();B.letter=ABC()[idxOf(B.letter)];startBuild(B.letter);updateNext();startOrder();G.cur=null}
+    if(dir){DIR=nx.d;store.set("dir",nx.d);renderDir();startOrder();G.cur=null;renderGameControls();const b=$("dir");b.classList.remove("flip-in");void b.offsetWidth;b.classList.add("flip-in")}
+    startRecite();renderPbar()},400))}
 
 /* ---------- Recite: listening for letters said out loud ----------
    Works where the browser offers speech recognition and the page may use the microphone
@@ -1454,7 +1514,7 @@ function startListening(){
       const alts=Array.from({length:res.length},(_,i)=>res[i]);
       // use the first guess that contains any letter names (the top guess may be "the" when "D" was said)
       const letters=alts.map(a=>heardLetters(a.transcript)).find(l=>l.length)||[];
-      setMicState("Heard: “"+res[0].transcript.trim()+"”","live");
+      setMicState("Heard: “"+(letters.length?letters.map(l=>CASE==="up"?l.toUpperCase():l).join(" "):res[0].transcript.trim())+"”","live");
       for(let k=done;k<letters.length;k++){if(R.pos>=R.seq.length)break;
         const want=R.seq[R.pos].toLowerCase(),got=letters[k];
         // accept the expected letter from any of the recogniser's guesses for this phrase
@@ -1674,7 +1734,10 @@ async function runHDemo(v){
       await wait(1300);
     }
     if(v==="recite"){
-      for(let i=0;i<R.seq.length;i++){const t=$("r-grid").children[i];await moveTo(t,i?260:550);await press();reciteTap(t);await wait(330)}
+      // the frame stays on the letter being named until the next one is tapped, so voice and frame match
+      const kids=()=>[...$("r-grid").children];
+      for(let i=0;i<R.seq.length;i++){const t=$("r-grid").children[i];kids().forEach(k=>k.classList.toggle("now",k===t));
+        await moveTo(t,i?260:550);await press();reciteTap(t);kids().forEach(k=>k.classList.toggle("now",k===t));await wait(520)}
       await wait(700);
     }
     HSEEN[key]=true;store.set("hdemo",HSEEN);
