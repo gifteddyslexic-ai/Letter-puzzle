@@ -128,6 +128,9 @@ nav.tabs .pill{display:grid;place-items:center;width:52px;height:30px;border-rad
 /* ---------- build ---------- */
 .picker{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px 1px;flex:none}
 @media (min-width:600px){.picker{grid-template-columns:repeat(13,1fr)}}
+svg.lined{overflow:visible}
+.aguide{stroke:#9fc3e6;stroke-width:1;vector-effect:non-scaling-stroke}
+.aguide.mid{stroke-dasharray:4 4}
 .board .guide{stroke:#9fc3e6;stroke-width:1.2;vector-effect:non-scaling-stroke}
 .board .guide.mid{stroke-dasharray:5 5}
 .pick{position:relative;aspect-ratio:118/100;min-width:0;border:0;background:transparent;border-radius:8px;padding:1px}
@@ -325,6 +328,7 @@ nav.tabs .pill{display:grid;place-items:center;width:52px;height:30px;border-rad
 .mic.unsupported{opacity:.6}
 @keyframes micpulse{50%{transform:scale(1.15)}}
 .notice-open{display:inline-block;margin:4px 0;font-weight:700;color:var(--navy,#1f2a4a)}
+.mlog{font:11px/1.35 ui-monospace,Menlo,monospace;background:#f3f6fb;border:1px solid #d5e2f2;border-radius:8px;margin:4px 12px;padding:6px 8px;max-height:110px;overflow:auto;white-space:pre-wrap}
 .micstate{font-size:13px;color:var(--muted);min-width:0}
 .micstate.live::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e84494;margin-right:6px;animation:micpulse 1s infinite}
 .notice{margin:0;padding:8px 12px;border-radius:10px;background:#fff6e0;border:1px solid #f2d48a;color:#6b4e00;font-size:13.5px;line-height:1.35;flex:none}
@@ -426,6 +430,7 @@ nav.tabs .pill{display:grid;place-items:center;width:52px;height:30px;border-rad
       <div class="lvbar" id="r-help" role="tablist" aria-label="How many letters to show"></div>
       <div class="microw"><button class="mic" id="r-mic" aria-pressed="false" title="Say the letters out loud and the app will listen"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Listen</span></button><span class="micstate" id="r-micstate" aria-live="polite"></span></div>
       <p class="notice" id="r-notice" hidden></p>
+      <pre class="mlog" id="r-log" hidden></pre>
       <span id="r-ctx" hidden></span><span id="r-progress" hidden></span>
       <div class="grid fit" id="r-grid"></div>
       <p class="status" id="r-status"></p>
@@ -663,7 +668,15 @@ function renderLevels(){
 function centerPick(){return;const el=$("picker").querySelector('[aria-current="true"]');if(!el)return;const p=$("picker");
   p.scrollTo({left:el.offsetLeft-p.clientWidth/2+el.clientWidth/2,behavior:"smooth"})}
 // letters cropped close to their shapes so they fill each cell of the alphabet
-function pickSVG(c,f=0){const H=frameH(c);return letterSVG(c,f).replace(`viewBox="0 0 130 ${H}"`,H===100?`viewBox="6 0 118 100"`:`viewBox="14 6 102 122"`)}
+// faint notebook lines behind a letter of the alphabet: top and base for capitals; ascender, x-height, base and descender for lowercase
+function guideYs(c){const ys=(L,k)=>LETTERS[L].map(p=>p[k]);
+  if(isUp(c))return[[Math.min(...ys("H",3))],[Math.max(...ys("H",5))]]
+  return[[Math.min(...ys("l",3))],[Math.min(...ys("x",3)),1],[Math.max(...ys("x",5))],[Math.max(...ys("p",5))]]}
+function withLines(svg,c,x0,x1){const ext=(x1-x0)*.12;x0-=ext;x1+=ext;
+  const l=guideYs(c).map(([y,mid])=>`<line class="aguide${mid?" mid":""}" x1="${x0}" x2="${x1}" y1="${y}" y2="${y}"/>`).join("");
+  return svg.replace('class="lt" viewBox','class="lt lined" viewBox').replace('aria-hidden="true">','aria-hidden="true">'+l)}
+function pickSVG(c,f=0,lines=true){const H=frameH(c),svg=letterSVG(c,f).replace(`viewBox="0 0 130 ${H}"`,H===100?`viewBox="6 0 118 100"`:`viewBox="14 6 102 122"`);
+  return lines?withLines(svg,c,H===100?6:14,H===100?124:116):svg}
 function renderPicker(){
   const d=doneSet(B.level),n=countDone(B.level);
   $("picker").innerHTML=ABC().map(c=>`<button class="pick${d.has(c)?" done":""}" data-l="${c}" aria-label="Letter ${c}${d.has(c)?", built":""}" ${c===B.letter?'aria-current="true"':""}>${pickSVG(c)}</button>`).join("");
@@ -1059,7 +1072,7 @@ function startOrder(){
 function setOStatus(){} // Order gives no written feedback
 const okAt=i=>O.arr[i]===O.seq[i];
 function renderOrder(){
-  $("o-slots").innerHTML=O.arr.map((c,i)=>`<div class="tile${okAt(i)?" ok":""}" data-i="${i}" ${okAt(i)?"":'tabindex="0" role="button"'} aria-label="${c}${okAt(i)?", in place":""}">${(i===0||i===O.seq.length-1)&&!okAt(i)?`<span class="ohint">${pickSVG(O.seq[i])}</span>`:""}${pickSVG(c)}</div>`).join("");
+  $("o-slots").innerHTML=O.arr.map((c,i)=>`<div class="tile${okAt(i)?" ok":""}" data-i="${i}" ${okAt(i)?"":'tabindex="0" role="button"'} aria-label="${c}${okAt(i)?", in place":""}">${(i===0||i===O.seq.length-1)&&!okAt(i)?`<span class="ohint">${pickSVG(O.seq[i],0,false)}</span>`:""}${pickSVG(c)}</div>`).join("");
   $("o-slots").classList.toggle("low",CASE==="low");fitOrder();
   $("o-slots").querySelectorAll(".tile:not(.ok)").forEach(orderDrag);
   const n=O.arr.filter((c,i)=>okAt(i)).length;$("o-progress").innerHTML=`<b>${n}</b> of ${O.seq.length} in place`;
@@ -1205,7 +1218,7 @@ function openChoices(i){
   c.style.width=w+12+"px";
   let top=r.bottom+6;if(top+h>innerHeight-8)top=Math.max(8,r.top-6-h);
   c.style.top=top+"px";c.style.left=Math.max(8,Math.min(innerWidth-w-20,r.left+r.width/2-(w+12)/2))+"px";
-  c.innerHTML=opts.map(l=>`<button class="tile" data-l="${l}" aria-label="${l}" style="width:${w}px">${letterSVG(l)}</button>`).join("");
+  c.innerHTML=opts.map(l=>`<button class="tile" data-l="${l}" aria-label="${l}" style="width:${w}px">${withLines(letterSVG(l),l,0,130)}</button>`).join("");
   c.querySelectorAll("button").forEach(b=>b.onclick=e=>{e.stopPropagation();pickChoice(i,b)});
   c.hidden=false;c.dataset.i=i;
 }
@@ -1377,6 +1390,8 @@ function reciteEvent(type,info){
   if(type==="mistake"&&cur)nudge(cur);
   if(type==="hesitation"&&cur)cur.animate([{transform:"scale(1)"},{transform:"scale(1.15)"},{transform:"scale(1)"},{transform:"scale(1.15)"},{transform:"scale(1)"}],{duration:1400});
 }
+const MLOG=/debug/i.test(location.hash+location.search);
+function mlog(t){if(!MLOG)return;const el=$("r-log");el.hidden=false;el.textContent=(new Date().toTimeString().slice(3,8)+" "+t+"\n"+el.textContent).slice(0,4000)}
 function setMicState(text,cls){const el=$("r-micstate");el.textContent=text;el.className="micstate"+(cls?" "+cls:"")}
 function showNotice(html){const n=$("r-notice");n.innerHTML=html;n.hidden=!html;requestAnimationFrame(fitRecite)}
 // is the app shown inside a frame on another page (a website embed, or the preview)?
@@ -1394,8 +1409,9 @@ function startListening(){
   showNotice("");LISTEN.on=true;LISTEN.consumed={};LISTEN.lastProgress=performance.now();setMic(true);
   const rec=new SR();rec.lang="en-GB";rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=3;LISTEN.rec=rec;
   // every restart begins a fresh list of results, so forget what was counted in the last one
-  rec.onstart=()=>{LISTEN.consumed={};setMicState("Listening…","live")};
-  rec.onresult=e=>{if(LISTEN.paused||VIEW!=="recite")return;
+  rec.onstart=()=>{mlog("start");LISTEN.consumed={};setMicState("Listening…","live")};
+  rec.onresult=e=>{if(MLOG)try{for(let r=e.resultIndex;r<e.results.length;r++){const x=e.results[r];mlog("result #"+r+(x.isFinal?" final":" interim")+": "+Array.from({length:x.length},(_,i)=>"“"+x[i].transcript+"”").join(" / ")+" → letters "+(heardLetters(x[0].transcript).join("")||"none")+", want "+(R.seq[R.pos]||"-"))}}catch(err){mlog("log error "+err)}
+    if(LISTEN.paused||VIEW!=="recite")return;
     if(COACH.active){if(COACH.speaking)return;for(let r=e.resultIndex;r<e.results.length;r++){const res=e.results[r];
         if(res.isFinal)coachAnswer(res[0].transcript);else{$("coach-live").textContent=res[0].transcript+"…";coachTimer()}}return}
     for(let r=e.resultIndex;r<e.results.length;r++){
@@ -1417,16 +1433,17 @@ function startListening(){
         else{LISTEN.consumed[r]=k;break}   // interim guess may still change: wait for more
         LISTEN.consumed[r]=k+1}
     }};
-  rec.onerror=e=>{
+  rec.onerror=e=>{mlog("error: "+e.error+(e.message?" "+e.message:""));
     if(e.error==="not-allowed"||e.error==="service-not-allowed"){LISTEN.on=false;setMic(false);
       // Safari answers "service-not-allowed" when the device's own speech recognition (Dictation/Siri) is switched off
       if(e.error==="service-not-allowed"&&!micPolicyBlocked())showNotice("<b>Speech recognition is switched off on this device.</b> On a Mac, turn on Dictation in System Settings › Keyboard, then reload this page and tap Listen. On an iPhone or iPad, turn on Dictation in Settings › General › Keyboard. You can still tap each letter as you say it.");
       else micBlockedNotice()}
     else if(e.error==="network"){showNotice("<b>Listening needs an internet connection</b> in this browser. You can still tap each letter.")}
-    else if(e.error!=="no-speech"&&e.error!=="aborted")setMicState("Didn't catch that","");
+    else if(e.error!=="no-speech"&&e.error!=="aborted")setMicState("Didn't catch that ("+e.error+")","");
   };
-  rec.onend=()=>{if(LISTEN.on&&!LISTEN.paused){try{rec.start()}catch(err){}}else setMicState("","")};
-  try{rec.start()}catch(err){showNotice("<b>Listening couldn't start.</b> You can still tap each letter.");LISTEN.on=false;setMic(false)}
+  rec.onend=()=>{mlog("end");if(LISTEN.on&&!LISTEN.paused){try{rec.start()}catch(err){}}else setMicState("","")};
+  mlog("tap Listen — "+(window.SpeechRecognition?"SpeechRecognition":"webkitSpeechRecognition")+", "+location.protocol+(FRAMED?", in a frame":""));
+  try{rec.start()}catch(err){mlog("start failed: "+err);showNotice("<b>Listening couldn't start.</b> You can still tap each letter.");LISTEN.on=false;setMic(false)}
   clearInterval(LISTEN.hesT);
 
 }
