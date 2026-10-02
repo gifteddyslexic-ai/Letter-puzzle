@@ -1,4 +1,9 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
 <title>Letter-Puzzle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
@@ -184,6 +189,7 @@ svg.lined{overflow:visible}
 @keyframes nope{0%{opacity:0}20%{opacity:1}80%{opacity:1}100%{opacity:0}}
 .board-wrap{flex:1 1 auto;min-height:260px;position:relative}
 .board{position:absolute;inset:0;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;background:#fff;border-radius:16px;border:1px solid var(--line)}
+.board .piece.offstage{visibility:hidden}
 .board .tray-line{stroke:var(--line);stroke-dasharray:4 6;stroke-width:1.5}
 .board .ghost path{fill:var(--ghost);stroke:var(--ghost-line);stroke-width:.6}
 .board .piece{cursor:grab;filter:url(#shadow)}
@@ -291,6 +297,39 @@ svg.lined{overflow:visible}
 #view-games .tile.right{border-color:transparent;box-shadow:none;background:color-mix(in srgb,var(--good) 16%,transparent)!important}
 #view-games .tile.sel{border-color:transparent;box-shadow:none;background:color-mix(in srgb,var(--accent) 16%,transparent)!important}
 #view-games .options .tile:hover{border-color:var(--ink)}
+.pbar .pseg.locked,.lvbar .lseg.locked{filter:saturate(.25) brightness(.85)}
+.padlock{position:absolute;inset:0;margin:auto;width:11px;height:11px;fill:#fff;stroke:#fff;opacity:.9;pointer-events:none}
+.lvbar .padlock{width:14px;height:14px}
+.lock{position:absolute;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(255,255,255,.82);backdrop-filter:blur(3px)}
+.lock-card{display:flex;flex-direction:column;align-items:stretch;gap:12px;width:min(320px,100%);text-align:center}
+.lock-big{width:72px;height:72px;margin:0 auto 6px;fill:var(--navy,#1f2a4a);stroke:var(--navy,#1f2a4a)}
+.lock-btn,.ck-big{background:var(--navy,#1f2a4a);color:#fff;font-size:18px;min-height:56px}
+.lock-btn.alt,.ck-big.alt{background:#e84a8f}
+.ckbar{position:absolute;left:0;right:0;top:0;z-index:30;display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--navy,#1f2a4a);color:#fff}
+.ck-b{width:40px;height:40px;border:0;border-radius:50%;background:#dbe8f7;color:#1f2a4a;font-size:22px;font-weight:700;display:grid;place-items:center;cursor:pointer}
+.ck-b svg{width:22px;height:22px;fill:#1f2a4a}
+.ck-dots{flex:1;display:flex;gap:7px;justify-content:center}
+.ck-dots i{width:14px;height:14px;border-radius:50%;background:#46557c}
+.ck-dots i.now{background:#fff;box-shadow:0 0 0 3px #e84a8f}.ck-dots i.ok{background:#43b17c}.ck-dots i.miss{background:#f4a54b}
+.ck-mic{flex:1;display:flex;justify-content:center}.ck-mic svg{width:30px;height:30px;fill:#fff;animation:micpulse 1s infinite}
+body.checking .controls,body.checking .pbar,body.checking nav.tabs{pointer-events:none;opacity:.45}
+body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking .microw,body.checking .board-tools,body.checking #r-status{visibility:hidden}
+.ckres-rows{display:flex;flex-direction:column;gap:10px;align-items:center}
+.ck-row{display:flex;align-items:center;gap:18px;font-size:34px}
+.ck-row .ok{color:#23915a;font-weight:700}.ck-row .again{color:#e8a92a;font-weight:700}
+.ck-ico{display:inline-flex;align-items:center;gap:2px;height:52px;color:#1f2a4a;font-size:26px}.ck-ico svg{height:52px;width:auto}.ck-ico svg rect{fill:#1f2a4a}
+.caption{position:fixed;left:0;right:0;margin:0 auto;width:fit-content;top:max(10px,env(safe-area-inset-top,0px));z-index:90;max-width:min(92vw,560px);padding:10px 18px;border-radius:16px;
+  background:#1f2a4a;color:#fff;font-family:"Atkinson Hyperlegible",var(--f-display),sans-serif;font-weight:700;font-size:clamp(18px,4.6vw,24px);line-height:1.3;text-align:center;
+  box-shadow:0 8px 24px rgba(10,20,40,.35);cursor:pointer;text-wrap:balance}
+.caption.in{animation:capin .3s ease}
+@keyframes capin{from{opacity:0;transform:translateY(-8px)}}
+.ptoken{position:fixed;z-index:40;width:22px;height:22px;margin:-15px 0 0 -11px;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+.ptoken svg{width:100%;height:100%;fill:#ffd84a;stroke:#1f2a4a;stroke-width:1.5;stroke-linejoin:round}
+.journey{position:fixed;inset:0;z-index:79;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(20,30,60,.5);cursor:pointer}
+.j-card{width:min(520px,100%);border-radius:22px;background:#fff;padding:10px;box-shadow:0 20px 60px rgba(10,20,40,.4);animation:jin .4s cubic-bezier(.3,1.4,.5,1)}
+.j-card svg{display:block;width:100%;height:auto}
+.j-badge{transform-box:fill-box}.j-badge.new{opacity:0}.j-badge.new.pop{opacity:1;animation:starpop .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes jin{from{transform:scale(.85);opacity:0}}
 .master{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(20,30,60,.55)}
 .m-card{position:relative;width:min(460px,100%);background:#fff;border-radius:22px;padding:22px 20px 20px;box-shadow:0 20px 60px rgba(10,20,40,.4);display:flex;flex-direction:column;gap:14px;align-items:stretch;text-align:center;border:3px solid #f3b6d4}
 .m-stars{display:flex;justify-content:center;align-items:center;gap:8px;font-size:44px;color:#e8a92a}
@@ -380,7 +419,8 @@ svg.lined{overflow:visible}
 @keyframes fade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-
+</head>
+<body>
 <div class="app">
   <header class="top">
     <div class="logo-panel"><div class="brand" id="brand"><h1>Letter-Puzzle</h1></div></div>
@@ -398,6 +438,17 @@ svg.lined{overflow:visible}
   </header>
 
   <main>
+    <div class="lock" id="lock" hidden><div class="lock-card">
+      <svg class="lock-big" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke-width="2.2"/></svg>
+      <button class="btn lock-btn" id="lock-go">▶ Carry on</button>
+      <button class="btn lock-btn alt" id="lock-check">✓ Show what I know</button>
+    </div></div>
+    <div class="ckbar" id="ckbar" hidden>
+      <button class="ck-b" id="ck-say" aria-label="Hear it again"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8a5 5 0 0 1 0 8" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+      <span class="ck-dots" id="ck-dots"></span><span class="ck-mic" id="ck-mic" hidden><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
+      <button class="ck-b" id="ck-skip" aria-label="I don't know this one">?</button>
+      <button class="ck-b" id="ck-stop" aria-label="Stop the check">&times;</button>
+    </div>
     <!-- BUILD -->
     <section class="view" id="view-build">
       <h2 class="sr" id="b-title">Build a capital letter</h2><span class="progress" id="b-progress" hidden></span>
@@ -471,6 +522,16 @@ svg.lined{overflow:visible}
         <button class="m-close" id="master-close" aria-label="Close">&times;</button>
       </div>
     </div>
+    <div class="master" id="ckoffer" hidden role="dialog" aria-label="Where to start"><div class="m-card">
+        <button class="btn ck-big" id="ck-begin">▶ Start at the beginning</button>
+        <button class="btn ck-big alt" id="ck-know">✓ Show what I know</button>
+      </div></div>
+    <div class="master" id="ckres" hidden role="dialog" aria-label="Check results"><div class="m-card">
+        <div class="ckres-rows" id="ckres-rows"></div>
+        <button class="btn m-pdf" id="ckres-go">▶ Carry on</button>
+      </div></div>
+    <div class="caption" id="caption" hidden role="status" aria-live="polite"></div>
+    <div class="journey" id="journey" hidden role="dialog" aria-label="Your journey"><div class="j-card" id="j-card"><svg id="j-map" viewBox="0 0 360 240" aria-hidden="true"></svg></div></div>
     <div class="hdemo" id="hdemo" hidden><span class="demo-tag">▶ Demo</span><button class="skip" id="hdemo-skip">Skip ›</button></div>
   </main>
 
@@ -558,6 +619,10 @@ function renderSound(){$("sound").setAttribute("aria-pressed",sound);$("sound").
   $("sound").innerHTML=`<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/>${sound?'<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>':'<path d="m17 9 5 6m0-6-5 6"/>'}</svg>`}
 $("sound").onclick=()=>{sound=!sound;store.set("sound",sound);renderSound();if(!sound&&window.speechSynthesis)speechSynthesis.cancel()};
 renderSound();
+// spoken instructions are also written in a caption at the top (tap it to hear it again)
+function sayShow(text,rate=.95,onend,shown){const c=$("caption");if(c){c.textContent=shown||text;c.hidden=false;c.dataset.say=text;
+    c.classList.remove("in");void c.offsetWidth;c.classList.add("in");clearTimeout(sayShow.t);sayShow.t=setTimeout(()=>c.hidden=true,Math.max(4500,String(shown||text).length*110))}
+  say(text,rate,onend)}
 function say(text,rate=.85,onend){
   if(!sound||!window.speechSynthesis){if(onend)setTimeout(onend,650);return}
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-GB";u.rate=rate;
@@ -621,13 +686,14 @@ function renderPbar(){renderTabBars();const bar=$("pbar");if(!bar)return;try{con
       return `<button class="pseg${l.cur?" cur":""}" data-k="${acts.length-1}" style="--c:hsl(${sec.h} 85% ${L}%);--f:${l.f.toFixed(3)}" aria-label="${l.name}, ${Math.round(l.f*100)}% done" data-name="${l.name}" data-pct="${Math.round(l.f*100)}"><i></i>${l.f>=.999?'<b class="pstar">★</b>':""}</button>`}).join("")+`</div>`}).join("");
   bar.querySelectorAll(".pseg").forEach(b=>{b.onclick=()=>{acts[+b.dataset.k]();if(lastTouch)showTip(b,1300)};
     b.onpointerenter=e=>{if(e.pointerType==="mouse")showTip(b)};b.onpointerleave=()=>hideTip();b.onfocus=()=>showTip(b);b.onblur=hideTip;
-    b.onpointerdown=e=>{lastTouch=e.pointerType!=="mouse"}})}catch(e){/* not ready yet during start-up */}}
+    b.onpointerdown=e=>{lastTouch=e.pointerType!=="mouse"}});
+  requestAnimationFrame(()=>{try{applyLock();placeToken();checkMilestones()}catch(e){}})}catch(e){/* not ready yet during start-up */}}
 function show(v){const changed=VIEW!==v;VIEW=v;if(v!=="recite"&&typeof R!=="undefined"&&R.paused){R.paused=false;$("view-recite").classList.remove("paused");$("r-resume").hidden=true;$("r-pause").setAttribute("aria-pressed","false")}if(v==="recite"&&changed)setTimeout(()=>typeof autoListen==="function"&&autoListen(),900);if(v!=="recite"&&typeof COACH!=="undefined"&&COACH.active)coachClose();if(v!=="recite"&&typeof LISTEN!=="undefined"&&LISTEN.on)stopListening();$("tab-games").setAttribute("aria-selected",v==="games"||v==="order");setTimeout(renderTabBars,0);setTimeout(renderPbar,0);if(v!=="games")clearTimeout(G.hintT);closeChoices();$("opts").hidden=v==="games"||v==="recite";renderDir();closeSheet();if(v!=="build")stopDemo(true);stopHDemo();views.forEach(x=>{$("view-"+x).hidden=x!==v;(x!=="order")&&$("tab-"+x).setAttribute("aria-selected",x===v||(x==="games"&&v==="order"))});store.set("view",v);
   if(changed){const el=$("view-"+v);el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter")}
   if(v==="build")requestAnimationFrame(()=>{centerPick();fitPicker()});
   if(v==="build"&&changed&&B.solved)$("b-next").onclick();
-  if(v==="order"){requestAnimationFrame(fitOrder);if(changed)setTimeout(()=>{if(VIEW==="order")say(orderSay(),.95)},250)}
-  if(v==="recite")requestAnimationFrame(fitRecite);
+  if(v==="order"){requestAnimationFrame(fitOrder);if(changed)setTimeout(()=>{if(VIEW==="order")sayShow(orderSay())},250)}
+  if(v==="recite"){requestAnimationFrame(fitRecite);if(changed)setTimeout(()=>{if(VIEW==="recite"&&!HDEMO&&!CHECK.active&&!lockedHere())sayShow("Say the alphabet "+stageWords(CASE,DIR)+".")},400)}
   if(v==="games")requestAnimationFrame(fitGames);
   if(v!=="build"&&changed)setTimeout(()=>maybeHDemo(v),0);
   if(v==="games"&&(!G.cur||G.cur.solved))newRound();}
@@ -666,7 +732,7 @@ function renderDir(){
   b.title=DIR?"Z … A (backwards): tap for A … Z":"A … Z (forwards): tap for Z … A";b.setAttribute("aria-label",DIR?"Backwards, Z to A":"Forwards, A to Z");
   b.hidden=VIEW==="build";
 }
-$("dir").onclick=()=>{setDir(DIR?0:1);if(VIEW==="order")say(orderSay(),.95);const b=$("dir");b.classList.remove("flip-in");void b.offsetWidth;b.classList.add("flip-in")};
+$("dir").onclick=()=>{setDir(DIR?0:1);if(VIEW==="order")sayShow(orderSay());const b=$("dir");b.classList.remove("flip-in");void b.offsetWidth;b.classList.add("flip-in")};
 function setDir(d){DIR=d;store.set("dir",d);renderDir();setTimeout(renderPbar,0);startOrder();G.cur=null;renderGameControls();if(VIEW==="games")newRound();startRecite()}
 const RANGES=[[0,9],[9,18],[18,26],[0,26]];
 const rangeLabels=()=>RANGES.map(([a,b])=>`${ABC()[a]}–${ABC()[b-1]}`);
@@ -781,14 +847,17 @@ function startBuild(c,fromDemo){
   const own=glyph(c),H=frameH(c);
   const extra=hasPile(B.level)?pickDistractors(c,own.length<=2?2:3):[];
   const all=own.map((p,i)=>({p,i,real:true})).concat(extra.map(p=>({p,i:-1,real:false})));
-  const rows=all.length>4?2:1,trayH=rows===2?330:170;
-  LINE=OY+H*SC+26;BH=LINE+trayH;board.setAttribute("viewBox",`0 0 360 ${BH}`);
+  const rows=all.length>4?2:1,trayH=rows===2?330:170,draw=isDraw();
+  // drawing levels: no tray of pieces; the board is just the writing space, so the letter fills as much of the screen as it can
+  if(draw){LINE=OY+H*SC+16;BH=LINE;board.setAttribute("viewBox",`30 0 300 ${BH}`)}
+  else{LINE=OY+H*SC+26;BH=LINE+trayH;board.setAttribute("viewBox",`0 0 360 ${BH}`)}
   B.slots=own.map((p,i)=>({i,key:p[6],x0:p[2],y0:p[3],x1:p[4],y1:p[5],filled:false}));
   const order=shuffle([...Array(all.length).keys()]),perRow=Math.ceil(all.length/rows),colW=230/perRow;
   B.pieces=all.map((o,j)=>{const p=o.p,slot=order[j],r=Math.floor(slot/perRow),col=slot%perRow;
     const cx=(p[2]+p[4])/2,cy=(p[3]+p[5])/2;
     let tx=-50+colW*(col+.5)+(Math.random()-.5)*colW*.25;
-    const ty=(LINE-OY)/SC+(rows===2?52+r*84:55)+(Math.random()-.5)*8;
+    let ty=(LINE-OY)/SC+(rows===2?52+r*84:55)+(Math.random()-.5)*8;
+    if(draw){tx=65+(Math.random()-.5)*60;ty=H+260} // waiting out of sight below the writing space until its part is drawn
         const alt=new Set(own.map((q,j)=>o.real&&twin180(p,q)?j:-1).filter(j=>j>=0));
     const mir=new Set(own.map((q,j)=>o.real&&twinMirror(p,q)?j:-1).filter(j=>j>=0));
     if(o.real&&isLevelBar(c,p))alt.add(o.i);
@@ -798,6 +867,7 @@ function startBuild(c,fromDemo){
     return {i:o.i,real:o.real,p,key:p[6],x0:p[2],y0:p[3],cx,cy,dx:tx-cx,dy:ty-cy,hx:tx-cx,hy:ty-cy,rot,placed:false,sym:p[7],alt,mir};
   });
   B.solved=false;
+  if(typeof fitPicker==="function")requestAnimationFrame(fitPicker);
   setBStatus("");
   renderPicker();drawBoard();
   if(isDraw()&&!fromDemo)maybeDemo();
@@ -809,7 +879,7 @@ function drawBoard(){
   board.innerHTML=`<defs>
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="1.3" stdDeviation="1.3" flood-color="#14202a" flood-opacity=".3"/></filter>
     <filter id="lift" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#14202a" flood-opacity=".3"/></filter></defs>
-  <line class="tray-line" x1="14" x2="346" y1="${LINE}" y2="${LINE}"/>
+  ${isDraw()?"":`<line class="tray-line" x1="14" x2="346" y1="${LINE}" y2="${LINE}"/>`}
   <g id="lg" transform="translate(${OX},${OY}) scale(${SC})" class="${B.solved?"solved":""}">
    ${guides(B.letter)}
    ${shadow?`<g class="ghost">${own.map(p=>`<path d="${p[1]}"/>`).join("")}</g>`:""}
@@ -818,7 +888,7 @@ function drawBoard(){
   const pg=board.querySelector("#pieces");
   [...B.pieces].sort((a,b)=>(b.placed?1:0)-(a.placed?1:0)).forEach(pc=>{
     const g=document.createElementNS(NS,"g");g.classList.add("piece");
-    if(pc.placed)g.classList.add("placed");if(B.solved&&!pc.real)g.classList.add("gone");
+    if(pc.placed)g.classList.add("placed");else if(isDraw())g.classList.add("offstage");if(B.solved&&!pc.real)g.classList.add("gone");
     // an invisible box around each loose piece makes it easy to grab or tap even when slightly off the shape
     const pad=5,hit=pc.placed?"":`<rect class="hit" x="${pc.p[2]-pad}" y="${pc.p[3]-pad}" width="${pc.p[4]-pc.p[2]+pad*2}" height="${pc.p[5]-pc.p[3]+pad*2}" fill="transparent"/>`;
     g.innerHTML=hit+`<path d="${pc.p[1]}" fill="${pc.p[0]}"/>`;pc.g=g;place(g,pc);pg.appendChild(g);
@@ -957,7 +1027,7 @@ function flyIn(s){
   const j=B.slots.indexOf(s),free=B.pieces.filter(p=>p.real&&!p.placed&&!p.flying);
   let pc=free.find(p=>p.key===s.key),rot=0,tx,ty;
   if(pc){tx=s.x0-pc.x0;ty=s.y0-pc.y0}else{pc=free.find(p=>p.alt&&p.alt.has(j));if(!pc)return;rot=180;tx=(s.x0+s.x1)/2-pc.cx;ty=(s.y0+s.y1)/2-pc.cy}
-  s.flying=true;pc.flying=true;pc.g.parentNode.appendChild(pc.g);
+  s.flying=true;pc.flying=true;pc.g.classList.remove("offstage");pc.g.parentNode.appendChild(pc.g);
   const x0=pc.dx,y0=pc.dy,r0=pc.rot,dr=((rot-r0)%360+540)%360-180,t0=performance.now();
   const step=now=>{const e=Math.min(1,(now-t0)/450),k=1-Math.pow(1-e,3);
     pc.dx=x0+(tx-x0)*k;pc.dy=y0+(ty-y0)*k;pc.rot=r0+dr*k;place(pc.g,pc);
@@ -1060,6 +1130,7 @@ function tryFit(pc,g,wasTap){
 function afterPlace(msg){const left=B.slots.filter(s=>!s.filled).length;
   if(left===0)finishLetter()}
 function finishLetter(){
+  if(CHECK.active){B.solved=true;board.querySelector("#lg").classList.add("solved");letterResult(true);return} // during a check nothing is recorded
   const c=B.letter,lv=B.level;B.solved=true;
   const d=doneSet(lv);d.add(c);B.done[lv]=[...d];store.set("bdone4",B.done);
   board.querySelector("#lg").classList.add("solved");
@@ -1081,7 +1152,7 @@ function burst(colors){
 let DEMO=null;
 const DEMO_SEEN=store.get("demo4",{});
 const demoKey=()=>B.level>=5?"5:"+CASE+":"+strokeKey(B.letter):String(B.level);
-function maybeDemo(){if(!DEMO_SEEN[demoKey()])setTimeout(()=>{if(VIEW==="build"&&!DEMO&&!B.solved)runDemo()},450)}
+function maybeDemo(){if(CHECK.active||lockedHere())return;if(!DEMO_SEEN[demoKey()])setTimeout(()=>{if(VIEW==="build"&&!DEMO&&!B.solved)runDemo()},450)}
 function stopDemo(reset){if(DEMO){DEMO.stop=true;DEMO.reset=reset}}
 async function runDemo(){
   if(DEMO)return;const tok={stop:false,reset:true};DEMO=tok;const lv=B.level,dk=demoKey();
@@ -1183,7 +1254,7 @@ function fitGrid(g,n,gx,gy){
 }
 // Build alphabet: as big as it can be while leaving most of the screen for the board
 function fitPicker(){const g=$("picker"),v=$("view-build");if(!g||v.hidden)return;
-  const H=Math.max(110,Math.round(v.clientHeight*0.3)),W=g.clientWidth,a=CASE==="low"?102/122:118/100,n=26,gx=1,gy=3;if(!W)return;
+  const H=Math.max(isDraw()?84:110,Math.round(v.clientHeight*(isDraw()?.17:.3))),W=g.clientWidth,a=CASE==="low"?102/122:118/100,n=26,gx=1,gy=3;if(!W)return;
   let best=null;for(let c=7;c<=13;c++){const r=Math.ceil(n/c),w=Math.min((W-(c-1)*gx)/c,((H-(r-1)*gy)/r)*a);if(!best||w>best.w)best={c,w}}
   g.style.gridTemplateColumns=`repeat(${best.c},${Math.floor(best.w)}px)`;g.style.justifyContent="center"}
 new ResizeObserver(()=>fitPicker()).observe($("view-build"));
@@ -1236,7 +1307,7 @@ function orderDrag(t){
   t.addEventListener("pointerup",end);t.addEventListener("pointercancel",()=>{st=null;t.classList.remove("lifted");clearOver();if(fl){fl.remove();fl=null}});
 }
 function orderSay(){return $("o-title").textContent.replace(/\.?$/,"")+", in "+(CASE==="up"?"upper case":"lower case")+"."}
-$("o-title").onclick=()=>say(orderSay(),.95);
+$("o-title").onclick=()=>sayShow(orderSay());
 $("o-new").onclick=()=>{startOrder();closeSheet()};
 
 /* ======================= GAMES ======================= */
@@ -1438,6 +1509,7 @@ function renderRecite(){
 function fitRecite(){const g=$("r-grid");if(!g||$("view-recite").hidden)return;fitGrid(g,g.children.length||26,2,4)}
 {const ro=new ResizeObserver(()=>fitRecite());ro.observe($("view-recite"));ro.observe($("r-grid"))}
 function reciteTap(t,quiet){
+  if(CHECK.active&&!quiet)return; // in a check the letters have to be said, not tapped
   const i=+t.dataset.i,c=R.seq[i];LISTEN.lastProgress=performance.now();
   if(i<R.pos){say(spoken(c),1);return}
   if(i!==R.pos){reciteEvent("mistake",{expected:R.seq[R.pos],heard:c,position:R.pos});return}
@@ -1445,6 +1517,7 @@ function reciteTap(t,quiet){
   if(!quiet)say(spoken(c),1);try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
   reciteEvent("correct",{expected:c,position:i});
   R.pos++;const n=$("r-grid").children[R.pos];if(n)n.classList.add("now");
+  if(R.pos>=R.seq.length&&CHECK.active){checkReciteDone();return}
   if(R.pos>=R.seq.length&&!HDEMO){RDONE[rKey(R.help,CASE,DIR)]=true;store.set("rdone",RDONE);renderPbar();renderTabBars();
     $("r-status").innerHTML=`<span class="cheer" role="img" aria-label="3 stars"><span>★</span><span>★</span><span>★</span></span>`;
     burstIn($("r-grid"),["#43b17c","#f4a54b","#4aabe3","#e84a8f","#ffe14f","#7a398e"]);
@@ -1455,6 +1528,217 @@ function reciteTap(t,quiet){
   }
 }
 function stopListen(){}
+/* ---------- "You are here": a star marker on the progress bar that hops on when a level is finished ---------- */
+const TOK={el:null,idx:-1,done:new Set()};
+function chime(){if(!sound)return;try{const AC=window.AudioContext||window.webkitAudioContext;TOK.ac=TOK.ac||new AC();const ac=TOK.ac,t=ac.currentTime;
+  [[784,0],[1175,.12]].forEach(([f,d])=>{const o=ac.createOscillator(),g=ac.createGain();o.type="sine";o.frequency.value=f;
+    g.gain.setValueAtTime(0,t+d);g.gain.linearRampToValueAtTime(.18,t+d+.02);g.gain.exponentialRampToValueAtTime(.001,t+d+.35);o.connect(g).connect(ac.destination);o.start(t+d);o.stop(t+d+.4)})}catch(e){}}
+function placeToken(){
+  const bar=$("pbar");if(!bar)return;const segs=[...bar.querySelectorAll(".pseg")];
+  const idx=segs.findIndex(b=>b.classList.contains("cur")),done=new Set(segs.map((b,i)=>b.querySelector(".pstar")?i:-1).filter(i=>i>=0));
+  if(!TOK.el){TOK.el=document.createElement("div");TOK.el.className="ptoken";TOK.el.setAttribute("aria-hidden","true");
+    TOK.el.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z"/></svg>';document.body.appendChild(TOK.el)}
+  if(idx<0||bar.offsetParent===null){TOK.el.hidden=true;TOK.idx=idx;TOK.done=done;return}
+  TOK.el.hidden=false;
+  const r=segs[idx].getBoundingClientRect(),x=r.left+r.width/2,y=r.top;
+  const from=TOK.pos,earned=TOK.idx>=0&&TOK.idx!==idx&&done.has(TOK.idx)&&!TOK.done.has(TOK.idx);
+  TOK.el.style.left=x+"px";TOK.el.style.top=y+"px";TOK.pos=[x,y];
+  if(from&&(from[0]!==x||from[1]!==y)&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
+    const dx=from[0]-x,dy=from[1]-y,lift=earned?-34:-12;
+    TOK.el.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:`translate(${dx/2}px,${dy/2+lift}px) scale(${earned?1.5:1.1})`,offset:.5},{transform:"translate(0,0)"}],
+      {duration:earned?900:350,easing:"ease-in-out"});
+    if(earned){chime();setTimeout(()=>TOK.el.animate([{transform:"scale(1)"},{transform:"scale(1.35) rotate(20deg)"},{transform:"scale(1)"}],{duration:420}),900)}}
+  TOK.idx=idx;TOK.done=done}
+addEventListener("resize",()=>{TOK.pos=null;placeToken()});
+
+/* ---------- Journey map: shown only when a whole section is finished ---------- */
+const MILES=[
+  {k:"bup",icon:"A",say:"You've built all the capital letters!",done:()=>LEVELS.every((L,i)=>"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").every(c=>doneSet(i+1).has(c)))},
+  {k:"blow",icon:"a",say:"You've built all the lowercase letters!",done:()=>LEVELS.every((L,i)=>"abcdefghijklmnopqrstuvwxyz".split("").every(c=>doneSet(i+1).has(c)))},
+  {k:"games",icon:"G",say:"You've finished all the games!",done:()=>((ODONE.up0&&ODONE.up1)||(ODONE.low0&&ODONE.low1))&&["missing","swap","flip"].every(t=>[0,1,2].every(k=>GDONE[t+k]))},
+  {k:"rhalf",icon:"R",say:"Halfway up the mountain! Keep on reciting.",done:()=>rFrac(0)>=1&&rFrac(1)>=1},
+  {k:"rall",icon:"castle",say:"",done:()=>[0,1,2,3].every(k=>rFrac(k)>=1)}];
+// where the stops sit on the map (a winding path from the meadow up to the castle)
+const MAP_PTS=[[46,206],[150,178],[262,192],[300,118],[176,92],[86,40]];
+let MSEEN=store.get("miles",null);
+function milesInit(){if(MSEEN)return;MSEEN={};MILES.forEach(m=>{try{if(m.done())MSEEN[m.k]=true}catch(e){}});store.set("miles",MSEEN)} // progress made before the map existed doesn't pop up
+let milesBusy=false;
+function checkMilestones(){
+  if(!MSEEN)milesInit();if(milesBusy||DEMO||HDEMO||CHECK.active||!$("ckres").hidden)return;
+  const m=MILES.find(m=>!MSEEN[m.k]&&(()=>{try{return m.done()}catch(e){return false}})());if(!m)return;
+  MSEEN[m.k]=true;store.set("miles",MSEEN);
+  if(m.k==="rall")return; // the castle has its own celebration and certificate
+  milesBusy=true;setTimeout(()=>{showJourney(MILES.indexOf(m),m.say)},2600)}
+function showJourney(reached,line){
+  const ov=$("journey"),svg=$("j-map");ov.hidden=false;
+  const done=MILES.map(m=>!!MSEEN[m.k]);
+  const pts=MAP_PTS,path=pts.map((p,i)=>(i?"L":"M")+p[0]+" "+p[1]).join(" ");
+  const cols=["#43b17c","#2f9e6b","#3a8fd8","#e84a8f","#b8338a"];
+  const icon=(m,i,on)=>{const [x,y]=pts[i+1];
+    if(m.icon==="castle")return `<g transform="translate(${x-22},${y-30})"><path d="M4 50V18h7v7h6v-7h10v7h6v-7h7v32z" fill="${on?"#e8a92a":"#c9d4e3"}"/><rect x="18" y="34" width="8" height="16" rx="4" fill="#fff"/><path d="M22 2v12" stroke="#7a2a52" stroke-width="2"/><path d="M22 2l10 4-10 4z" fill="#e84494"/></g>`;
+    const t=m.icon==="G"?"?":m.icon;
+    return `<circle cx="${x}" cy="${y}" r="17" fill="${on?cols[i]:"#dfe7f1"}" stroke="#fff" stroke-width="3"/>`+
+      (m.icon==="R"?`<g transform="translate(${x-8},${y-9})" fill="${on?"#fff":"#9aabbe"}"><rect x="5" y="0" width="6" height="11" rx="3"/><path d="M1 8a7 7 0 0 0 14 0" fill="none" stroke="${on?"#fff":"#9aabbe"}" stroke-width="2"/><rect x="7" y="15" width="2" height="4"/></g>`
+      :`<text x="${x}" y="${y+7}" text-anchor="middle" font-family="Lexend,system-ui,sans-serif" font-weight="700" font-size="20" fill="${on?"#fff":"#9aabbe"}">${t}</text>`)+
+      (on?`<g transform="translate(${x+13},${y-14})"><g class="j-badge${i===reached?" new":""}"><circle r="8" fill="#ffd84a" stroke="#fff" stroke-width="2"/><path d="M0-4.5l1.3 2.7 3 .4-2.2 2 .6 3L0 2.1-2.7 3.6l.6-3-2.2-2 3-.4z" fill="#b97a0a"/></g></g>`:"")};
+  const seg=i=>`M${pts[i][0]} ${pts[i][1]} L${pts[i+1][0]} ${pts[i+1][1]}`,segLen=i=>Math.hypot(pts[i+1][0]-pts[i][0],pts[i+1][1]-pts[i][1]);
+  svg.innerHTML=`<rect width="360" height="240" rx="18" fill="#e9f6ee"/>
+    <path d="M0 150 Q90 120 180 150 T360 140 V240 H0z" fill="#d4efdd"/><path d="M200 140 L270 60 L340 140z M150 120 L210 50 L270 120z" fill="#dfe7f1"/>
+    <path d="M250 74 l20-14 l20 14z" fill="#fff"/>
+    <path d="${path}" fill="none" stroke="#c9d4e3" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 14"/>
+    ${MILES.map((m,i)=>done[i]&&i!==reached?`<path d="${seg(i)}" stroke="#e8a92a" stroke-width="7" stroke-linecap="round"/>`:"").join("")}
+    <path id="j-trail" d="${seg(reached)}" fill="none" stroke="#e8a92a" stroke-width="7" stroke-linecap="round" stroke-dasharray="0 999"/>
+    <circle cx="${pts[0][0]}" cy="${pts[0][1]}" r="9" fill="#1f2a4a"/>
+    ${MILES.map((m,i)=>icon(m,i,done[i])).join("")}
+    <g id="j-token"><circle r="11" fill="#1f2a4a" stroke="#fff" stroke-width="3"/><path d="M0-6l1.8 3.7 4 .5-3 2.8.8 4L0 3-3.6 5l.8-4-3-2.8 4-.5z" fill="#ffd84a"/></g>`;
+  const trail=svg.querySelector("#j-trail"),tok=svg.querySelector("#j-token");
+  const at=d=>{const p=trail.getPointAtLength(Math.max(0,Math.min(total,d)));tok.setAttribute("transform",`translate(${p.x},${p.y})`)};
+  // the marker walks the stretch of path into the newly reached stop, colouring it as it goes
+  const total=segLen(reached);at(0);
+  const t0=performance.now(),dur=1600,ease=e=>e<.5?2*e*e:1-Math.pow(-2*e+2,2)/2;
+  const step=now=>{const e=Math.min(1,(now-t0)/dur),d=total*ease(e);at(d);trail.setAttribute("stroke-dasharray",`${d} 999`);
+    if(e<1)requestAnimationFrame(step);else{const b=svg.querySelector(".j-badge.new");if(b)b.classList.add("pop");chime();burstIn($("j-card"),["#43b17c","#f4a54b","#4aabe3","#e84a8f","#ffe14f"])}};
+  setTimeout(()=>requestAnimationFrame(step),500);
+  if(typeof pauseListening==="function")pauseListening(5000);
+  sayShow(line);
+  clearTimeout(showJourney.t);showJourney.t=setTimeout(closeJourney,9000)}
+function closeJourney(){$("journey").hidden=true;milesBusy=false;clearTimeout(showJourney.t);setTimeout(checkMilestones,300)}
+$("journey").onclick=closeJourney;
+
+/* ---------- Levels open in order: each one opens when the one before is finished, or when a check shows it is already known ---------- */
+const CAPS="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),SMALL="abcdefghijklmnopqrstuvwxyz".split("");
+const SEQ=[1,2,3,4,5,6].map(l=>"bup"+l).concat([1,2,3,4,5,6].map(l=>"blow"+l),["o0","o1"],
+  ["missing","swap","flip"].flatMap(t=>[0,1,2].map(k=>t+k)),[0,1,2,3].map(k=>"r"+k));
+let PROVEN=store.get("proven",{}),ALLOPEN=store.get("allopen",false);
+function doneOf(key){try{let m;
+  if(m=key.match(/^b(up|low)(\d)$/))return(m[1]==="up"?CAPS:SMALL).every(c=>doneSet(+m[2]).has(c));
+  if(m=key.match(/^o(\d)$/))return !!(ODONE["up"+m[1]]||ODONE["low"+m[1]]);
+  if(m=key.match(/^r(\d)$/))return rFrac(+m[1])>=1;
+  if(key==="mixed")return !!GDONE.flip2;
+  return !!GDONE[key]}catch(e){return false}}
+function unlockedKey(key){if(ALLOPEN||doneOf(key))return true;if(key==="mixed")return doneOf("flip2");
+  const i=SEQ.indexOf(key);return i<=0||doneOf(SEQ[i-1])}
+const provenKey=key=>key.startsWith("bup")?PROVEN.bup:key.startsWith("blow")?PROVEN.blow:/^(o\d|missing|swap|flip|mixed)/.test(key)?PROVEN.games:PROVEN[key];
+function curKey(){
+  if(VIEW==="build")return "b"+CASE+B.level;
+  if(VIEW==="order")return "o"+DIR;
+  if(VIEW==="games"){const t=TYPES[G.type][0];return t==="mixed"?"mixed":t+(G.lv[t]||0)}
+  if(VIEW==="recite")return "r"+R.help;return ""}
+const lockedHere=()=>!CHECK.active&&!unlockedKey(curKey());
+// keys behind each block of the progress bar and the level bars, so locked ones can show a padlock
+const pbKeys=()=>LEVELS.map((L,i)=>"b"+CASE+(i+1)).concat(["o0","o1"],["missing","swap","flip"].flatMap(t=>[0,1,2].map(k=>t+k)),[0,1,2,3].map(k=>"r"+k));
+const LOCK_SVG='<svg class="padlock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke-width="2.4"/></svg>';
+function markBars(){try{
+  const segs=[...$("pbar").querySelectorAll(".pseg")],keys=pbKeys();
+  segs.forEach((b,i)=>{const k=keys[i];if(!k)return;const lk=!unlockedKey(k);b.classList.toggle("locked",lk);
+    if(lk&&!b.querySelector(".padlock"))b.insertAdjacentHTML("beforeend",LOCK_SVG);
+    const st=b.querySelector(".pstar");if(st&&provenKey(k))st.textContent="✓"});
+  const bars={"b-tabs":LEVELS.map((L,i)=>"b"+CASE+(i+1)),"r-help":[0,1,2,3].map(k=>"r"+k),
+    "g-types":["o0","missing0","swap0","flip0","mixed"],"o-types":["o0","missing0","swap0","flip0","mixed"]};
+  Object.entries(bars).forEach(([id,keys])=>[...$(id).querySelectorAll(".lseg")].forEach((b,i)=>{const k=keys[i];const lk=!unlockedKey(k);b.classList.toggle("locked",lk);
+    if(lk&&!b.querySelector(".padlock"))b.insertAdjacentHTML("beforeend",LOCK_SVG);
+    const st=b.querySelector(".lstars");if(st&&provenKey(k))st.textContent="✓"}))}catch(e){}}
+function applyLock(){markBars();const lk=lockedHere(),el=$("lock");
+  if(lk&&el.hidden){el.hidden=false;if(VIEW==="recite"&&LISTEN.on)stopListening();stopDemo&&DEMO&&stopDemo(true);
+    sayShow("This level opens when you finish the ones before. Or show what you know.")}
+  else if(!lk)el.hidden=true}
+// where to carry on: the first level not finished yet
+function goKey(key){let m;
+  if(m=key.match(/^b(up|low)(\d)$/)){if(CASE!==m[1])setCase(m[1]);show("build");if(B.level!==+m[2])setBuildLevel(+m[2]);else startBuild(B.letter)}
+  else if(m=key.match(/^o(\d)$/)){show("order");if(DIR!==+m[1])setDir(+m[1])}
+  else if(m=key.match(/^r(\d)$/)){show("recite");R.help=+m[1];store.set("rhelp",R.help);startRecite()}
+  else{const t=key.slice(0,-1),k=+key.slice(-1),ti=TYPES.findIndex(x=>x[0]===t);show("games");G.type=ti;G.lv[t]=k;store.set("glv",G.lv);renderGameControls();newRound()}
+  renderPbar()}
+const firstOpen=()=>SEQ.find(k=>!doneOf(k))||"r3";
+$("caption").onclick=()=>{const c=$("caption");say(c.dataset.say||c.textContent,.95)};
+$("lock-go").onclick=()=>goKey(firstOpen());
+$("lock-check").onclick=()=>startCheck();
+// grown-ups: press and hold the logo for 2 seconds to open every level (and again to go back to opening in order)
+{let t;const br=$("brand");br.addEventListener("pointerdown",()=>{t=setTimeout(()=>{ALLOPEN=!ALLOPEN;store.set("allopen",ALLOPEN);
+  sayShow(ALLOPEN?"All levels are open.":"Levels open in order.");br.animate([{filter:"none"},{filter:"drop-shadow(0 0 10px #ffd84a)"},{filter:"none"}],{duration:900});renderPbar()},2000)});
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>br.addEventListener(ev,()=>clearTimeout(t)))}
+
+/* ---------- "Show what I know": draw letters without an outline, then say the alphabet forwards and backwards ---------- */
+const CHECK={active:false};
+const TRICKY={up:["B","D","P","Q","M","W","N","Z","S","G","J","R"],low:["b","d","p","q","a","g","n","u","m","w"]};
+function pickCheckLetters(c){const tr=shuffle(TRICKY[c].slice()),pool=c==="up"?CAPS:SMALL;
+  const out=c==="low"?["b","d"].concat(tr.filter(x=>x!=="b"&&x!=="d").slice(0,2)):tr.slice(0,3);
+  shuffle(pool.filter(x=>!out.includes(x))).slice(0,8-out.length).forEach(x=>out.push(x));return shuffle(out)}
+function startCheck(){
+  if(CHECK.active)return;
+  const parts=[];
+  if(!SEQ.slice(0,6).every(doneOf))parts.push({kind:"draw",c:"up"});
+  if(!SEQ.slice(6,12).every(doneOf))parts.push({kind:"draw",c:"low"});
+  const canListen=SR&&location.protocol!=="file:";
+  if(!(SEQ.slice(12,25).every(doneOf)&&doneOf("r0")&&doneOf("r1"))&&canListen)parts.push({kind:"say",d:0},{kind:"say",d:1});
+  $("ckoffer").hidden=true;$("lock").hidden=true;
+  if(!parts.length){goKey(firstOpen());return}
+  Object.assign(CHECK,{active:true,parts,pi:-1,res:[],saved:{case:CASE,level:B.level,letter:B.letter,dir:DIR,help:R.help},noMic:!canListen});
+  document.body.classList.add("checking");$("ckbar").hidden=false;stopDemo(false);stopHDemo();if(LISTEN.on)stopListening();
+  nextPart()}
+function ckDots(n,i,marks){$("ck-dots").innerHTML=Array.from({length:n},(_,k)=>`<i class="${k<i?(marks[k]?"ok":"miss"):k===i?"now":""}"></i>`).join("")}
+function nextPart(){
+  CHECK.pi++;const p=CHECK.parts[CHECK.pi];if(!p)return showResults();
+  clearTimeout(CHECK.t);CHECK.part=p;
+  if(p.kind==="draw"){
+    if(CASE!==p.c)setCase(p.c);show("build");B.level=6;CHECK.letters=pickCheckLetters(p.c);CHECK.i=-1;CHECK.marks=[];
+    $("ck-skip").hidden=false;$("ck-mic").hidden=true;
+    sayShow("Draw the letters I say, "+(p.c==="up"?"in upper case.":"in lower case."),.95,()=>nextLetter());
+  }else{
+    show("recite");R.help=3;DIR=p.d;renderDir();CHECK.mis=0;CHECK.hes=0;CHECK.hesAt={};
+    $("ck-skip").hidden=true;$("ck-mic").hidden=false;ckDots(0,0,[]);startRecite();
+    sayShow(p.d?"Now say the alphabet backwards.":"Say the alphabet forwards, as well as you can.",.95,()=>{if(CHECK.active&&CHECK.part===p){LISTEN.lastProgress=performance.now();startListening()}});
+  }}
+function nextLetter(){
+  if(!CHECK.active)return;clearTimeout(CHECK.t);CHECK.i++;ckDots(8,CHECK.i,CHECK.marks);
+  if(CHECK.i>=CHECK.letters.length){const ok=CHECK.marks.filter(Boolean).length;CHECK.res.push({p:CHECK.part,pass:ok>=7});return setTimeout(nextPart,700)}
+  const L=CHECK.letters[CHECK.i];B.letter=L;startBuild(L,true);sayLetter();
+  CHECK.t=setTimeout(()=>letterResult(false),30000)} // 30 seconds a letter, then it counts as not known
+function sayLetter(){if(CHECK.part&&CHECK.part.kind==="draw"){const L=CHECK.letters[CHECK.i],other=L===L.toUpperCase()?L.toLowerCase():L.toUpperCase();
+  sayShow("Draw "+spoken(L)+".",.9,null,"Draw:  "+other+"  →  "+(L===L.toUpperCase()?"upper case":"lower case"))}}
+function letterResult(ok){if(!CHECK.active||CHECK.marks.length>CHECK.i)return;clearTimeout(CHECK.t);CHECK.marks.push(ok);if(ok)chime();ckDots(8,CHECK.i+1,CHECK.marks);setTimeout(nextLetter,ok?900:300)}
+function checkReciteDone(){
+  if(!CHECK.active)return;if(LISTEN.on)stopListening();clearTimeout(CHECK.t);
+  CHECK.res.push({p:CHECK.part,pass:CHECK.mis<=1&&CHECK.hes<=2});chime();setTimeout(nextPart,900)}
+// a long silence ends that direction (it is counted as not yet known)
+setInterval(()=>{if(!CHECK.active||!CHECK.part||CHECK.part.kind!=="say"||!LISTEN.on)return;
+  if(performance.now()-LISTEN.lastProgress>14000){if(LISTEN.on)stopListening();CHECK.res.push({p:CHECK.part,pass:false});nextPart()}},1000);
+$("ck-say").onclick=()=>{const p=CHECK.part;if(!p)return;if(p.kind==="draw")sayLetter();else sayShow(p.d?"Say the alphabet backwards.":"Say the alphabet forwards.")};
+$("ck-skip").onclick=()=>letterResult(false);
+$("ck-stop").onclick=()=>showResults();
+function showResults(){
+  clearTimeout(CHECK.t);if(LISTEN.on)stopListening();
+  const r=CHECK.res,find=f=>r.find(x=>f(x.p));
+  const up=find(p=>p.kind==="draw"&&p.c==="up"),low=find(p=>p.kind==="draw"&&p.c==="low"),fw=find(p=>p.kind==="say"&&p.d===0),bw=find(p=>p.kind==="say"&&p.d===1);
+  // credit what was shown
+  const all=(set)=>{for(let l=1;l<=6;l++){const d=doneSet(l);set.forEach(c=>d.add(c));B.done[l]=[...d]}store.set("bdone4",B.done)};
+  if(up&&up.pass){all(CAPS);PROVEN.bup=true}
+  if(low&&low.pass){all(SMALL);PROVEN.blow=true}
+  const said=fw&&fw.pass&&bw&&bw.pass;
+  if(said){["up","low"].forEach(c=>{ODONE[c+0]=ODONE[c+1]=true});store.set("odone",ODONE);
+    ["missing","swap","flip"].forEach(t=>{[0,1,2].forEach(k=>GDONE[t+k]=true);G.lv[t]=2});store.set("gdone",GDONE);store.set("glv",G.lv);
+    [0,1].forEach(k=>RSTEPS.forEach(([c,d])=>RDONE[rKey(k,c,d)]=true));store.set("rdone",RDONE);PROVEN.games=PROVEN.r0=PROVEN.r1=true}
+  store.set("proven",PROVEN);
+  // the results screen is the celebration for what the check proved, so those journey stops are marked without popping up
+  if(!MSEEN)milesInit();MILES.forEach(m=>{if(m.k!=="rall"&&m.done())MSEEN[m.k]=true});store.set("miles",MSEEN);
+  const row=(icon,res)=>res?`<div class="ck-row">${icon}<span class="${res.pass?"ok":"again"}">${res.pass?"✓":"↻"}</span></div>`:"";
+  const mic=d=>`<span class="ck-ico"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2"/></svg>${d?"←":"→"}</span>`;
+  $("ckres-rows").innerHTML=row(`<span class="ck-ico">${pickSVG("A",0,false)}</span>`,up)+row(`<span class="ck-ico">${pickSVG("a",0,false)}</span>`,low)+row(mic(0),fw)+row(mic(1),bw);
+  const any=r.some(x=>x.pass);
+  $("ckres").hidden=false;$("ckbar").hidden=true;document.body.classList.remove("checking");CHECK.active=false;
+  if(any)burstIn($("ckres").querySelector(".m-card"),["#43b17c","#f4a54b","#4aabe3","#e84a8f","#ffe14f"]);
+  sayShow(any?"Well done! You can skip ahead.":r.length?"Let's practise together, step by step.":"Let's start.");
+  // put things back as they were before the check
+  const s=CHECK.saved;B.level=s.level;DIR=s.dir;store.set("dir",DIR);renderDir();R.help=s.help;if(CASE!==s.case)setCase(s.case);
+  renderPbar()}
+$("ckres-go").onclick=()=>{$("ckres").hidden=true;goKey(firstOpen())};
+// first time the app is opened: start at the beginning, or show what you know
+function maybeOffer(){if(store.get("placed",false))return;store.set("placed",true);
+  const anyProgress=SEQ.some(doneOf)||Object.keys(RDONE).length;if(anyProgress)return;
+  $("ckoffer").hidden=false;sayShow("Start at the beginning, or show what you know?")}
+$("ck-begin").onclick=()=>{$("ckoffer").hidden=true;goKey("bup1")};
+$("ck-know").onclick=()=>startCheck();
+
 /* ---------- Mastery: all of Recite "None" done → big celebration and a certificate ---------- */
 const MASTER_TEXT="Congratulations! You have mastered all the letters of the alphabet, and the alphabetical sequence.";
 function showMastery(){
@@ -1543,7 +1827,7 @@ function announceNext(nx){
   // point at what changes: the level bar, the ABC/abc switch or the A…Z switch
   const el=lvl?$("r-help").children[nx.k]:cas?$(nx.c==="up"?"case-up":"case-low"):$("dir");
   if(el){el.classList.remove("next-nudge");void el.offsetWidth;el.classList.add("next-nudge");setTimeout(()=>el.classList.remove("next-nudge"),2600)}
-  say(text,.95,()=>setTimeout(()=>{if(VIEW!=="recite"||R.pos<R.seq.length)return;
+  sayShow(text,.95,()=>setTimeout(()=>{if(VIEW!=="recite"||R.pos<R.seq.length)return;
     if(lvl){R.help=nx.k;store.set("rhelp",nx.k)}
     if(cas){CASE=nx.c;store.set("case",nx.c);renderCase();B.letter=ABC()[idxOf(B.letter)];startBuild(B.letter);updateNext();startOrder();G.cur=null}
     if(dir){DIR=nx.d;store.set("dir",nx.d);renderDir();startOrder();G.cur=null;renderGameControls();const b=$("dir");b.classList.remove("flip-in");void b.offsetWidth;b.classList.add("flip-in")}
@@ -1661,7 +1945,7 @@ $("r-pause").onclick=()=>R.paused?resumeRecite():pauseRecite();$("r-resume").onc
 $("r-grid").addEventListener("pointerdown",e=>{if(R.paused){e.stopPropagation();e.preventDefault();resumeRecite();COACH.justClosed=true;setTimeout(()=>COACH.justClosed=false,500)}},true);
 document.addEventListener("keydown",e=>{if(VIEW==="recite"&&(e.key==="p"||e.key==="P")&&!/input/i.test(document.activeElement.tagName)){R.paused?resumeRecite():pauseRecite()}});
 // listening is on by default in Recite (tapping Listen off is remembered)
-function autoListen(){if(VIEW==="recite"&&!HDEMO&&!R.paused&&!LISTEN.on&&SR&&location.protocol!=="file:"&&store.get("listen",true)!==false){LISTEN.auto=true;startListening()}}
+function autoListen(){if(CHECK.active||lockedHere())return;if(VIEW==="recite"&&!HDEMO&&!R.paused&&!LISTEN.on&&SR&&location.protocol!=="file:"&&store.get("listen",true)!==false){LISTEN.auto=true;startListening()}}
 function setMic(on){$("r-mic").setAttribute("aria-pressed",on);$("r-mic").querySelector("span").textContent=on?"Listening":"Listen"}
 // with #debug: a Test microphone button checks which microphone the browser uses and whether any sound reaches it (2 seconds)
 async function micCheck(){
@@ -1777,15 +2061,18 @@ $("r-grid").addEventListener("pointerdown",e=>{if(COACH.active){e.stopPropagatio
 $("r-grid").addEventListener("click",e=>{if(COACH.justClosed){e.stopPropagation()}},true);
 $("coach-q").onclick=()=>coachSay($("coach-q").dataset.say||$("coach-q").textContent);
 // the built-in responses: mistakes and hesitations start the conversation (replace these to change it)
-RECITE_RESPONSES.mistake=info=>{startCoach(info.expected,info.heard);return true};
-RECITE_RESPONSES.hesitation=info=>{startCoach(info.expected);return true};
+RECITE_RESPONSES.mistake=info=>{if(CHECK.active){CHECK.mis++;return true}startCoach(info.expected,info.heard);return true};
+RECITE_RESPONSES.hesitation=info=>{if(CHECK.active){CHECK.hes++;const p=info.position;CHECK.hesAt[p]=(CHECK.hesAt[p]||0)+1;
+    // stuck on the same letter twice: show it and carry on (it counts as a slip)
+    if(CHECK.hesAt[p]>=2){CHECK.mis++;const t=$("r-grid").children[p];if(t)reciteTap(t,true)}return true}
+  startCoach(info.expected);return true};
 if(!SR){$("r-mic").classList.add("unsupported");$("r-mic").title="Listening isn't available in this browser"}
 document.addEventListener("keydown",e=>{if(VIEW==="recite"&&!HDEMO&&(e.key===" "||e.key==="ArrowRight")){e.preventDefault();const t=$("r-grid").children[R.pos];if(t)reciteTap(t)}});
 
 /* ---------- animated demos for Order, Games and Recite ---------- */
 let HDEMO=null;const HSEEN=store.get("hdemo",{});
 const hkey=v=>v==="games"?"g-"+(G.cur?G.cur.kind:"missing"):v;
-function maybeHDemo(v){if(!HSEEN[hkey(v)])setTimeout(()=>{if(VIEW===v&&!HDEMO&&!DEMO)runHDemo(v)},500)}
+function maybeHDemo(v){if(CHECK.active||lockedHere())return;if(!HSEEN[hkey(v)])setTimeout(()=>{if(VIEW===v&&!HDEMO&&!DEMO)runHDemo(v)},500)}
 function stopHDemo(){if(HDEMO)HDEMO.stop=true}
 async function runHDemo(v){
   if(HDEMO||DEMO)return;const tok={stop:false};HDEMO=tok;const key=hkey(v);
@@ -1863,6 +2150,8 @@ $("b-turn").setAttribute("aria-pressed",B.turn);renderShapes();startBuild(B.lett
 // a link ending in #build, #games, #order or #recite opens that part of the app
 const vh=location.hash.toLowerCase().split(/[#&,]/).find(x=>views.includes(x)),v0=vh||store.get("view","build");if(views.includes(v0))show(v0);
 if(VIEW==="build")maybeDemo();else maybeHDemo(VIEW);
+setTimeout(()=>{renderPbar();maybeOffer()},1200);
 </script>
 
-</body></html>
+</body>
+</html>
