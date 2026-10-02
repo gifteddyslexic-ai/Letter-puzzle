@@ -178,6 +178,9 @@ svg.lined{overflow:visible}
 .board .finger circle{transform-box:fill-box;transform-origin:center}
 .board .finger circle.dot{fill:rgba(27,37,44,.22);stroke:#1b252c;stroke-width:2}
 .board .finger circle.ring{fill:none;stroke:#1b252c;stroke-width:2;opacity:0}
+.board .finger .rotarrows{transform-box:fill-box;transform-origin:center}
+.board .finger .rotarrows path{stroke:#e84a8f;stroke-width:3.5;stroke-linecap:round;fill:none}
+.board .finger .rotarrows path.head{fill:#e84a8f;stroke:#e84a8f;stroke-width:1.5;stroke-linejoin:round}
 .board .guide.pulse{animation:gpulse .5s ease-in-out 4 alternate}
 @keyframes gpulse{to{stroke:#3a82c9;stroke-width:3}}
 .board .nope{animation:nope .9s ease forwards}
@@ -907,7 +910,8 @@ function guides(c){
   return line(Math.min(...ys("l",3)))+line(Math.min(...ys("x",3)),"mid")+line(Math.max(...ys("x",5)))+line(Math.max(...ys("p",5)));
 }
 /* ---------- Draw level: draw over the letter; each piece flies in once its part is drawn ---------- */
-const BRUSH=10,COVER=.6,COVER_END=.45;
+// shape tolerance (tightened): a narrower brush and more of each piece must be covered; strokes may start anywhere and go either way
+const BRUSH=9,COVER=.7,COVER_END=.52;
 // Handwriting strokes for every letter, in the order and direction they are usually taught.
 // Coordinates are fractions of the letter's own box (0,0 top-left → 1,1 bottom-right).
 // A stroke is a list of points [u,v] and arcs {c:[cu,cv],r:[ru,rv],a:[from,to]} (degrees, 0 = right, 90 = down).
@@ -1010,20 +1014,20 @@ function inkTo(x,y){if(!inkPath)return;inkD+=` L${x.toFixed(1)} ${y.toFixed(1)}`
   lastPt=[x,y];FREE.len+=m;coverAt(x,y,[dx/m,dy/m])}
 function endStroke(){ // a little more forgiving once a stroke is finished
   if(freeDraw()){ // drawing freely: a stroke only counts when most of it follows the letter, so scribbling doesn't build it
-    const T=window.__T||{},longest=Math.max(...letterStrokes(B.letter).map(pathLen)),keep=FREE.n>0&&FREE.near/FREE.n>=(T.keep||.6)&&FREE.len<=longest*1.7+30;
+    const T=window.__T||{},longest=Math.max(...letterStrokes(B.letter).map(pathLen)),keep=FREE.n>0&&FREE.near/FREE.n>=(T.keep||.8)&&FREE.len<=longest*1.45+24;
     B.slots.forEach(s=>{if(!s.pend)return;if(keep)s.pend.forEach(k=>{if(!s.hit[k]){s.hit[k]=1;s.cov++}});s.pend=null});
     FREE.n=FREE.near=FREE.len=0}
-  const need=freeDraw()?((window.__T||{}).end||.4):COVER_END;
+  const need=freeDraw()?((window.__T||{}).end||.52):COVER_END;
   B.slots.forEach(s=>{if(!s.filled&&!s.flying&&s.samples&&s.samples.length&&s.cov/s.samples.length>=need)flyIn(s)})}
 const FREE={n:0,near:0,len:0};
 const pathLen=pts=>{let l=0;for(let i=1;i<pts.length;i++)l+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);return l};
 function coverAt(x,y,dir,still){
-  const free=freeDraw(),T=window.__T||{},br=free?(T.br||15):BRUSH,minDot=free?(T.dot??.3):.25,need=free?2:COVER;
-  if(free&&!still){FREE.n++;if(B.slots.some(s=>s.samples&&s.samples.some(([u,v])=>(u-x)*(u-x)+(v-y)*(v-y)<(br*1.3)**2)))FREE.near++}
+  const free=freeDraw(),T=window.__T||{},br=free?(T.br||10):BRUSH,minDot=free?(T.dot??.45):.45,need=free?2:COVER;
+  if(free&&!still){FREE.n++;if(B.slots.some(s=>s.samples&&s.samples.some(([u,v])=>(u-x)*(u-x)+(v-y)*(v-y)<(br*1.15)**2)))FREE.near++}
   B.slots.forEach(s=>{if(s.filled||s.flying||!s.samples)return;
     s.samples.forEach(([u,v],k)=>{if(s.hit[k]||(u-x)*(u-x)+(v-y)*(v-y)>=br*br)return;
       const want=s.dir&&s.dir[k];
-      if(want){if(!dir)return;const dot=dir[0]*want[0]+dir[1]*want[1];if((s.bidir?Math.abs(dot):dot)<minDot)return} // must be drawn the taught way
+      if(want){if(!dir)return;const dot=Math.abs(dir[0]*want[0]+dir[1]*want[1]);if(dot<minDot)return} // must run along the stroke, either way round
       if(free){(s.pend=s.pend||[]).push(k);return}
       s.hit[k]=1;s.cov++});
     if(s.samples.length&&s.cov/s.samples.length>=need)flyIn(s)});
@@ -1084,14 +1088,21 @@ function rejectPiece(pc){
     requestAnimationFrame(step)};requestAnimationFrame(step);
   try{navigator.vibrate&&navigator.vibrate([20,40,20])}catch(e){}
 }
-// show the demo finger tapping a piece, as a wordless hint to turn it
+// two semicircular arrows around a point, curling clockwise: "this piece needs turning"
+function rotArrowsSVG(R){const P=d=>{const a=d*Math.PI/180;return [R*Math.cos(a),R*Math.sin(a)]},f=n=>n.toFixed(1);
+  const arc=(a0,a1)=>{const[x0,y0]=P(a0),[x1,y1]=P(a1),t=a1*Math.PI/180,tx=-Math.sin(t),ty=Math.cos(t),nx=Math.cos(t),ny=Math.sin(t),h=8,w=5.5;
+    return `<path d="M${f(x0)} ${f(y0)}A${R} ${R} 0 0 1 ${f(x1)} ${f(y1)}" fill="none"/><path class="head" d="M${f(x1+tx*h)} ${f(y1+ty*h)}L${f(x1+nx*w)} ${f(y1+ny*w)}L${f(x1-nx*w)} ${f(y1-ny*w)}Z"/>`};
+  return `<g class="rotarrows">${arc(205,325)}${arc(25,145)}</g>`}
+// show the demo finger tapping a piece, with turning arrows, as a wordless hint to turn it
 function hintTap(pc){
   board.querySelectorAll(".finger.hint").forEach(x=>x.remove());
   const f=document.createElementNS(NS,"g");f.setAttribute("class","finger hint");f.style.pointerEvents="none";
   f.setAttribute("transform",`translate(${OX+(pc.cx+pc.dx)*SC},${OY+(pc.cy+pc.dy)*SC})`);
-  f.innerHTML=`<circle class="ring" r="12"/><circle class="dot" r="11"/>`;board.appendChild(f);
+  f.innerHTML=rotArrowsSVG(26)+`<circle class="ring" r="12"/><circle class="dot" r="11"/>`;board.appendChild(f);
   const ring=f.querySelector(".ring"),dot=f.querySelector(".dot");
   f.animate([{opacity:0},{opacity:1,offset:.1},{opacity:1,offset:.85},{opacity:0}],{duration:1900,fill:"forwards"});
+  // two half-circle arrows turn clockwise (the way a tap turns the piece) while the finger taps
+  f.querySelector(".rotarrows").animate([{transform:"rotate(0deg)"},{transform:"rotate(45deg)",offset:.42},{transform:"rotate(45deg)",offset:.5},{transform:"rotate(90deg)",offset:.92},{transform:"rotate(90deg)"}],{duration:1900,easing:"ease-in-out",fill:"forwards"});
   [300,1000].forEach(t=>setTimeout(()=>{ring.animate([{opacity:.8,transform:"scale(1)"},{opacity:0,transform:"scale(2.1)"}],{duration:420});
     dot.animate([{transform:"scale(1)"},{transform:"scale(.8)"},{transform:"scale(1)"}],{duration:240})},t));
   setTimeout(()=>f.remove(),2000);
@@ -1672,10 +1683,11 @@ function pickCheckLetters(c){const tr=shuffle(TRICKY[c].slice()),pool=c==="up"?C
 function startCheck(){
   if(CHECK.active)return;
   const parts=[];
-  if(!SEQ.slice(0,6).every(doneOf))parts.push({kind:"draw",c:"up"});
-  if(!SEQ.slice(6,12).every(doneOf))parts.push({kind:"draw",c:"low"});
+  const NB=SHOWN_LV.length; // build keys per case at the start of SEQ
+  if(!SEQ.slice(0,NB).every(doneOf))parts.push({kind:"draw",c:"up"});
+  if(!SEQ.slice(NB,2*NB).every(doneOf))parts.push({kind:"draw",c:"low"});
   const canListen=SR&&location.protocol!=="file:";
-  if(!(SEQ.slice(12,25).every(doneOf)&&doneOf("r0")&&doneOf("r1"))&&canListen)parts.push({kind:"say",d:0},{kind:"say",d:1});
+  if(!(SEQ.slice(2*NB,2*NB+13).every(doneOf)&&doneOf("r0")&&doneOf("r1"))&&canListen)parts.push({kind:"say",d:0},{kind:"say",d:1});
   $("ckoffer").hidden=true;$("lock").hidden=true;
   if(!parts.length){goKey(firstOpen());return}
   Object.assign(CHECK,{active:true,parts,pi:-1,res:[],saved:{case:CASE,level:B.level,letter:B.letter,dir:DIR,help:R.help},noMic:!canListen});
@@ -1700,8 +1712,10 @@ function nextLetter(){
   const L=CHECK.letters[CHECK.i];B.letter=L;startBuild(L,true);sayLetter();
   CHECK.t=setTimeout(()=>letterResult(false),30000)} // 30 seconds a letter, then it counts as not known
 function sayLetter(){if(CHECK.part&&CHECK.part.kind==="draw"){const L=CHECK.letters[CHECK.i];
-  sayShow("Draw "+spoken(L)+".",.9,null,"Draw:  "+L)}} // written in the same case as the letter to draw
-function letterResult(ok){if(!CHECK.active||CHECK.marks.length>CHECK.i)return;clearTimeout(CHECK.t);CHECK.marks.push(ok);if(ok)chime();ckDots(8,CHECK.i+1,CHECK.marks);setTimeout(nextLetter,ok?900:300)}
+  // written in the same case as the letter to draw, with the case named, and kept on screen until this letter is finished
+  sayShow("Draw "+spoken(L)+".",.9,null,"Draw "+(isUp(L)?"capital ":"lowercase ")+L);
+  clearTimeout(sayShow.t);const c=$("caption");sayShow.t=setTimeout(()=>{if(c)c.hidden=true},30000)}}
+function letterResult(ok){if(!CHECK.active||CHECK.marks.length>CHECK.i)return;clearTimeout(CHECK.t);clearTimeout(sayShow.t);$("caption").hidden=true;CHECK.marks.push(ok);if(ok)chime();ckDots(8,CHECK.i+1,CHECK.marks);setTimeout(nextLetter,ok?900:300)}
 function checkReciteDone(){
   if(!CHECK.active)return;if(LISTEN.on)stopListening();clearTimeout(CHECK.t);
   CHECK.res.push({p:CHECK.part,pass:CHECK.mis<=1&&CHECK.hes<=2});chime();setTimeout(nextPart,900)}
