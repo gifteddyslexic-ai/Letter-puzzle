@@ -1,9 +1,4 @@
-<!doctype html>
-<html lang="en-GB">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Letter-Puzzle</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
@@ -419,8 +414,7 @@ body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking 
 @keyframes fade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-</head>
-<body>
+
 <div class="app">
   <header class="top">
     <div class="logo-panel"><div class="brand" id="brand"><h1>Letter-Puzzle</h1></div></div>
@@ -639,7 +633,7 @@ const views=["build","order","games","recite"];
 let VIEW="build";
 // sections and their levels for the progress bar
 const PB_SECTIONS=[
-  {v:"build",h:150,levels:()=>LEVELS.map((L,i)=>({name:"Build level "+(i+1)+": "+L.t,f:countDone(i+1)/26,cur:VIEW==="build"&&B.level===i+1,go:()=>{show("build");if(B.level!==i+1)setBuildLevel(i+1)}}))},
+  {v:"build",h:150,levels:()=>SHOWN_LV.map((lv,i)=>({name:"Build level "+(i+1)+": "+LEVELS[lv-1].t,f:countDone(lv)/26,cur:VIEW==="build"&&B.level===lv,go:()=>{show("build");if(B.level!==lv)setBuildLevel(lv)}}))},
   {v:"games",h:205,levels:()=>[0,1].map(d=>({name:"Order "+dirLabels()[d],f:ODONE[CASE+d]?1:0,cur:VIEW==="order"&&DIR===d,go:()=>{show("order");if(DIR!==d)setDir(d)}})).concat(["missing","swap","flip"].flatMap((t,ti)=>[0,1,2].map(k=>{const lv=G.lv[t]||0;
     return {name:TYPES[ti][1]+" level "+(k+1),f:gLevelF(t,k),cur:VIEW==="games"&&TYPES[G.type][0]===t&&lv===k,
       go:()=>{show("games");G.type=ti;G.lv[t]=k;G.run[t]=0;store.set("glv",G.lv);store.set("grun",G.run);renderGameControls();newRound()}}})))},
@@ -678,7 +672,7 @@ function renderTabBars(){try{
   const pickGame=i=>{if(i===0){show("order");return}const ti=i-1;if(VIEW!=="games")show("games");G.type=ti;renderGameControls();newRound();maybeHDemo("games")};
   lvBar($("g-types"),games,pickGame);lvBar($("o-types"),games,pickGame);
   lvBar($("r-help"),HELP.map((h,k)=>({name:"Recite: "+h,f:rFrac(k),c:`hsl(330 85% ${62-k*8}%)`,cur:R.help===k})),k=>{R.help=k;store.set("rhelp",k);startRecite()});
-  lvBar($("b-tabs"),LEVELS.map((L,i)=>({name:`Build ${i+1}: ${L.t}`,f:countDone(i+1)/26,c:`hsl(150 75% ${56-i*6}%)`,cur:B.level===i+1})),i=>setBuildLevel(i+1));
+  lvBar($("b-tabs"),SHOWN_LV.map((lv,i)=>({name:`Build ${i+1}: ${LEVELS[lv-1].t}`,f:countDone(lv)/26,c:`hsl(150 75% ${56-i*6}%)`,cur:B.level===lv})),i=>setBuildLevel(SHOWN_LV[i]));
 }catch(e){}}
 function renderPbar(){renderTabBars();const bar=$("pbar");if(!bar)return;try{const acts=[];
   bar.innerHTML=PB_SECTIONS.map(sec=>{const ls=sec.levels(),n=ls.length;
@@ -747,24 +741,31 @@ const LEVELS=[
   {t:"Pile",d:"A pile with extra pieces, no outline"},
   {t:"Draw",d:"Draw over the outline and the pieces fly into place"},
   {t:"Draw freely",d:"Draw the letter without an outline; some wobble and drift is fine"}];
+// Levels 1 and 2 are switched off for now (capitals and lowercase). Their code and saved progress are kept:
+// to bring them back, empty this set, e.g. new Set([]).
+const HIDDEN_LV=new Set([1,2]);
+const SHOWN_LV=LEVELS.map((L,i)=>i+1).filter(lv=>!HIDDEN_LV.has(lv)); // real level numbers on show, in order
+const FIRST_LV=SHOWN_LV[0];
+const lvNum=lv=>SHOWN_LV.indexOf(lv)+1; // number shown to the learner (1, 2, 3, ...)
+const nextLv=lv=>SHOWN_LV[SHOWN_LV.indexOf(lv)+1];
 const hasPile=lv=>lv===3||lv===4, outlineOn=()=>B.level===1||B.level===3||B.level===5, isDraw=()=>B.level>=5;
 // drawing without an outline is more forgiving: a wider brush, less of each piece to cover, and a looser sense of direction
 const freeDraw=()=>B.level===6;
 function loadDone(){const v=store.get("bdone4",null);if(v)return v;
   const o=store.get("bdone2",null)||{1:store.get("bdone",[]),2:[]};return {1:o[1]||[],2:[],3:o[2]||[],4:[],5:[],6:[]}}
-const B={letter:ABC()[idxOf(store.get("bletter","A"))],done:loadDone(),level:Math.min(6,store.get("blevel4",1)),turn:store.get("turn",true),pieces:[],slots:[]};
+const B={letter:ABC()[idxOf(store.get("bletter","A"))],done:loadDone(),level:(lv=>SHOWN_LV.includes(lv)?lv:FIRST_LV)(Math.min(6,store.get("blevel4",FIRST_LV))),turn:store.get("turn",true),pieces:[],slots:[]};
 const board=$("board");
 const OX=76,OY=14,SC=1.6;let BH=354,LINE=184;
 const doneSet=lv=>new Set(B.done[lv]||[]);
 const countDone=lv=>{const d=doneSet(lv);return ABC().filter(c=>d.has(c)).length};
-const unlocked=lv=>lv>=1&&lv<=LEVELS.length; // any level can be chosen; finishing one still moves on to the next
+const unlocked=lv=>SHOWN_LV.includes(lv); // any level can be chosen; finishing one still moves on to the next
 const SEEN_LV=store.get("seenlv",{});
-const isFresh=lv=>lv>1&&unlocked(lv)&&!SEEN_LV[CASE+lv];
-function setBuildLevel(lv){B.level=lv;store.set("blevel4",lv);startBuild(B.letter);closeSheet();maybeDemo()}
+const isFresh=lv=>lv>FIRST_LV&&unlocked(lv)&&!SEEN_LV[CASE+lv];
+function setBuildLevel(lv){if(!unlocked(lv))lv=FIRST_LV;B.level=lv;store.set("blevel4",lv);startBuild(B.letter);closeSheet();maybeDemo()}
 const LV_SHORT=[["Pieces","outline"],["Pieces",""],["Pile","outline"],["Pile",""],["Draw","outline"],["Draw",""]];
 function renderLevels(){
   renderTabBars();
-  $("b-levels").innerHTML=LEVELS.map((L,i)=>`<button class="chip" data-lv="${i+1}" aria-pressed="${i+1===B.level}" title="${L.d}">${i+1}. ${L.t}</button>`).join(" ");
+  $("b-levels").innerHTML=SHOWN_LV.map((lv,i)=>{const L=LEVELS[lv-1];return `<button class="chip" data-lv="${lv}" aria-pressed="${lv===B.level}" title="${L.d}">${i+1}. ${L.t}</button>`}).join(" ");
   $("b-levels").querySelectorAll("button").forEach(b=>b.onclick=()=>setBuildLevel(+b.dataset.lv));
 }
 
@@ -785,7 +786,7 @@ function renderPicker(){
   $("picker").innerHTML=ABC().map(c=>`<button class="pick${d.has(c)?" done":""}" data-l="${c}" aria-label="Letter ${c}${d.has(c)?", built":""}" ${c===B.letter?'aria-current="true"':""}>${pickSVG(c)}</button>`).join("");
   $("picker").classList.toggle("low",CASE==="low");fitPicker();
   $("picker").querySelectorAll(".pick").forEach(b=>b.onclick=()=>startBuild(b.dataset.l));
-  $("b-progress").innerHTML=`Level ${B.level} · <b>${n}</b> of 26 built`;
+  $("b-progress").innerHTML=`Level ${lvNum(B.level)} · <b>${n}</b> of 26 built`;
   $("b-title").textContent=CASE==="up"?"Build a capital letter":"Build a lowercase letter";
   renderLevels();updateNext();renderPbar();
 }
@@ -834,7 +835,11 @@ function swapShapes(a,b){
     if(hit){hit.setAttribute("x",pc.p[2]-pad);hit.setAttribute("y",pc.p[3]-pad);hit.setAttribute("width",pc.p[4]-pc.p[2]+pad*2);hit.setAttribute("height",pc.p[5]-pc.p[3]+pad*2)}
     place(pc.g,pc)}}
 // the crossbar of lowercase e is right as long as it lies flat: either way round, and drawn in either direction
-function isLevelBar(c,p){return c==="e"&&(p[5]-p[3])<(p[4]-p[2])*.4&&p[1]===LETTERS.e[1][1]}
+// pieces that count as right either way up: the crossbars of e and t, and the slanting strokes of x and v
+const FLIP_OK={e:[1],t:[1,2],x:[0,1,2],v:[0,1]};
+const flipOK=(c,p)=>!!(FLIP_OK[c]&&FLIP_OK[c].some(i=>LETTERS[c][i][1]===p[1]));
+// crossbars can also be drawn in either direction
+function isLevelBar(c,p){return(c==="e"||c==="t")&&flipOK(c,p)}
 function pickDistractors(c,k){
   const keys=new Set(glyph(c).map(p=>p[6])),pool=[];
   const own=glyph(c);ABC().forEach(o=>{if(o===c)return;glyph(o).forEach(p=>{if(!keys.has(p[6])&&!pool.some(q=>q[6]===p[6])&&!own.some(q=>twin180(p,q)))pool.push(p)})});
@@ -843,7 +848,7 @@ function pickDistractors(c,k){
 function startBuild(c,fromDemo){
   if(DEMO&&!fromDemo)stopDemo(false);
   B.letter=c;store.set("bletter",c);
-  if(!unlocked(B.level))B.level=1;
+  if(!unlocked(B.level))B.level=FIRST_LV;
   const own=glyph(c),H=frameH(c);
   const extra=hasPile(B.level)?pickDistractors(c,own.length<=2?2:3):[];
   const all=own.map((p,i)=>({p,i,real:true})).concat(extra.map(p=>({p,i:-1,real:false})));
@@ -860,7 +865,7 @@ function startBuild(c,fromDemo){
     if(draw){tx=65+(Math.random()-.5)*60;ty=H+260} // waiting out of sight below the writing space until its part is drawn
         const alt=new Set(own.map((q,j)=>o.real&&twin180(p,q)?j:-1).filter(j=>j>=0));
     const mir=new Set(own.map((q,j)=>o.real&&twinMirror(p,q)?j:-1).filter(j=>j>=0));
-    if(o.real&&isLevelBar(c,p))alt.add(o.i);
+    if(o.real&&flipOK(c,p))alt.add(o.i);
     let rot=0;if(B.turn){const opts=[45,90,135,180,225,270,315].filter(a=>!(alt.size&&a===180));rot=opts[rand(opts.length)]}
     {const r=rot*Math.PI/180,hw=Math.abs((p[4]-p[2])/2*Math.cos(r))+Math.abs((p[5]-p[3])/2*Math.sin(r));
      tx=hw>110?65:Math.max(-40+hw,Math.min(170-hw,tx))}
@@ -1206,10 +1211,10 @@ async function runDemo(){
 function updateNext(){
   const allDone=lv=>{const d=doneSet(lv);return ABC().every(c=>d.has(c))};
   let mode="next";
-  if(B.level<LEVELS.length&&allDone(B.level))mode="nextlevel";
-  else if(CASE==="up"&&LEVELS.every((L,i)=>allDone(i+1)))mode="lower";
+  if(nextLv(B.level)&&allDone(B.level))mode="nextlevel";
+  else if(CASE==="up"&&SHOWN_LV.every(lv=>allDone(lv)))mode="lower";
   const nb=$("b-next");nb.dataset.mode=mode;nb.classList.toggle("fresh",mode!=="next");
-  nb.textContent=mode==="nextlevel"?`Level ${B.level+1} →`:mode==="lower"?"Lowercase →":"Next letter →";
+  nb.textContent=mode==="nextlevel"?`Level ${lvNum(nextLv(B.level))} →`:mode==="lower"?"Lowercase →":"Next letter →";
 }
 $("b-turn").onclick=()=>{B.turn=!B.turn;store.set("turn",B.turn);$("b-turn").setAttribute("aria-pressed",B.turn);startBuild(B.letter)};
 $("b-reset").onclick=()=>startBuild(B.letter);
@@ -1217,8 +1222,8 @@ $("b-demo").onclick=()=>{if(VIEW==="build"){startBuild(B.letter);runDemo()}else{
 $("demo-skip").onclick=()=>stopDemo(true);
 $("b-next").onclick=()=>{
   const mode=$("b-next").dataset.mode;
-  if(mode==="lower"){B.letter="a";B.level=1;store.set("blevel4",1);setCase("low");maybeDemo();return}
-  if(mode==="nextlevel"){B.level++;store.set("blevel4",B.level);startBuild(ABC()[0]);updateNext();maybeDemo();return}
+  if(mode==="lower"){B.letter="a";B.level=FIRST_LV;store.set("blevel4",FIRST_LV);setCase("low");maybeDemo();return}
+  if(mode==="nextlevel"){B.level=nextLv(B.level);store.set("blevel4",B.level);startBuild(ABC()[0]);updateNext();maybeDemo();return}
   const l=ABC(),d=doneSet(B.level);
   let k=l.indexOf(B.letter);for(let s=1;s<=26;s++){const c=l[(k+s)%26];if(!d.has(c)){startBuild(c);updateNext();return}}
   startBuild(l[(k+1)%26]);updateNext()};
@@ -1553,8 +1558,8 @@ addEventListener("resize",()=>{TOK.pos=null;placeToken()});
 
 /* ---------- Journey map: shown only when a whole section is finished ---------- */
 const MILES=[
-  {k:"bup",icon:"A",say:"You've built all the capital letters!",done:()=>LEVELS.every((L,i)=>"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").every(c=>doneSet(i+1).has(c)))},
-  {k:"blow",icon:"a",say:"You've built all the lowercase letters!",done:()=>LEVELS.every((L,i)=>"abcdefghijklmnopqrstuvwxyz".split("").every(c=>doneSet(i+1).has(c)))},
+  {k:"bup",icon:"A",say:"You've built all the capital letters!",done:()=>SHOWN_LV.every(lv=>"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").every(c=>doneSet(lv).has(c)))},
+  {k:"blow",icon:"a",say:"You've built all the lowercase letters!",done:()=>SHOWN_LV.every(lv=>"abcdefghijklmnopqrstuvwxyz".split("").every(c=>doneSet(lv).has(c)))},
   {k:"games",icon:"G",say:"You've finished all the games!",done:()=>((ODONE.up0&&ODONE.up1)||(ODONE.low0&&ODONE.low1))&&["missing","swap","flip"].every(t=>[0,1,2].every(k=>GDONE[t+k]))},
   {k:"rhalf",icon:"R",say:"Halfway up the mountain! Keep on reciting.",done:()=>rFrac(0)>=1&&rFrac(1)>=1},
   {k:"rall",icon:"castle",say:"",done:()=>[0,1,2,3].every(k=>rFrac(k)>=1)}];
@@ -1607,7 +1612,7 @@ $("journey").onclick=closeJourney;
 
 /* ---------- Levels open in order: each one opens when the one before is finished, or when a check shows it is already known ---------- */
 const CAPS="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),SMALL="abcdefghijklmnopqrstuvwxyz".split("");
-const SEQ=[1,2,3,4,5,6].map(l=>"bup"+l).concat([1,2,3,4,5,6].map(l=>"blow"+l),["o0","o1"],
+const SEQ=SHOWN_LV.map(l=>"bup"+l).concat(SHOWN_LV.map(l=>"blow"+l),["o0","o1"],
   ["missing","swap","flip"].flatMap(t=>[0,1,2].map(k=>t+k)),[0,1,2,3].map(k=>"r"+k));
 let PROVEN=store.get("proven",{}),ALLOPEN=store.get("allopen",false);
 function doneOf(key){try{let m;
@@ -1626,14 +1631,14 @@ function curKey(){
   if(VIEW==="recite")return "r"+R.help;return ""}
 const lockedHere=()=>!CHECK.active&&!unlockedKey(curKey());
 // keys behind each block of the progress bar and the level bars, so locked ones can show a padlock
-const pbKeys=()=>LEVELS.map((L,i)=>"b"+CASE+(i+1)).concat(["o0","o1"],["missing","swap","flip"].flatMap(t=>[0,1,2].map(k=>t+k)),[0,1,2,3].map(k=>"r"+k));
+const pbKeys=()=>SHOWN_LV.map(lv=>"b"+CASE+lv).concat(["o0","o1"],["missing","swap","flip"].flatMap(t=>[0,1,2].map(k=>t+k)),[0,1,2,3].map(k=>"r"+k));
 const LOCK_SVG='<svg class="padlock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke-width="2.4"/></svg>';
 function markBars(){try{
   const segs=[...$("pbar").querySelectorAll(".pseg")],keys=pbKeys();
   segs.forEach((b,i)=>{const k=keys[i];if(!k)return;const lk=!unlockedKey(k);b.classList.toggle("locked",lk);
     if(lk&&!b.querySelector(".padlock"))b.insertAdjacentHTML("beforeend",LOCK_SVG);
     const st=b.querySelector(".pstar");if(st&&provenKey(k))st.textContent="✓"});
-  const bars={"b-tabs":LEVELS.map((L,i)=>"b"+CASE+(i+1)),"r-help":[0,1,2,3].map(k=>"r"+k),
+  const bars={"b-tabs":SHOWN_LV.map(lv=>"b"+CASE+lv),"r-help":[0,1,2,3].map(k=>"r"+k),
     "g-types":["o0","missing0","swap0","flip0","mixed"],"o-types":["o0","missing0","swap0","flip0","mixed"]};
   Object.entries(bars).forEach(([id,keys])=>[...$(id).querySelectorAll(".lseg")].forEach((b,i)=>{const k=keys[i];const lk=!unlockedKey(k);b.classList.toggle("locked",lk);
     if(lk&&!b.querySelector(".padlock"))b.insertAdjacentHTML("beforeend",LOCK_SVG);
@@ -1694,8 +1699,8 @@ function nextLetter(){
   if(CHECK.i>=CHECK.letters.length){const ok=CHECK.marks.filter(Boolean).length;CHECK.res.push({p:CHECK.part,pass:ok>=7});return setTimeout(nextPart,700)}
   const L=CHECK.letters[CHECK.i];B.letter=L;startBuild(L,true);sayLetter();
   CHECK.t=setTimeout(()=>letterResult(false),30000)} // 30 seconds a letter, then it counts as not known
-function sayLetter(){if(CHECK.part&&CHECK.part.kind==="draw"){const L=CHECK.letters[CHECK.i],other=L===L.toUpperCase()?L.toLowerCase():L.toUpperCase();
-  sayShow("Draw "+spoken(L)+".",.9,null,"Draw:  "+other+"  →  "+(L===L.toUpperCase()?"upper case":"lower case"))}}
+function sayLetter(){if(CHECK.part&&CHECK.part.kind==="draw"){const L=CHECK.letters[CHECK.i];
+  sayShow("Draw "+spoken(L)+".",.9,null,"Draw:  "+L)}} // written in the same case as the letter to draw
 function letterResult(ok){if(!CHECK.active||CHECK.marks.length>CHECK.i)return;clearTimeout(CHECK.t);CHECK.marks.push(ok);if(ok)chime();ckDots(8,CHECK.i+1,CHECK.marks);setTimeout(nextLetter,ok?900:300)}
 function checkReciteDone(){
   if(!CHECK.active)return;if(LISTEN.on)stopListening();clearTimeout(CHECK.t);
@@ -1736,7 +1741,7 @@ $("ckres-go").onclick=()=>{$("ckres").hidden=true;goKey(firstOpen())};
 function maybeOffer(){if(store.get("placed",false))return;store.set("placed",true);
   const anyProgress=SEQ.some(doneOf)||Object.keys(RDONE).length;if(anyProgress)return;
   $("ckoffer").hidden=false;sayShow("Start at the beginning, or show what you know?")}
-$("ck-begin").onclick=()=>{$("ckoffer").hidden=true;goKey("bup1")};
+$("ck-begin").onclick=()=>{$("ckoffer").hidden=true;goKey("bup"+FIRST_LV)};
 $("ck-know").onclick=()=>startCheck();
 
 /* ---------- Mastery: all of Recite "None" done → big celebration and a certificate ---------- */
@@ -2153,5 +2158,4 @@ if(VIEW==="build")maybeDemo();else maybeHDemo(VIEW);
 setTimeout(()=>{renderPbar();maybeOffer()},1200);
 </script>
 
-</body>
-</html>
+</body></html>
