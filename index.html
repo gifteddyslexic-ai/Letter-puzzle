@@ -130,11 +130,14 @@ svg.lined{overflow:visible}
 .aguide.mid{stroke-dasharray:4 4}
 .board .guide{stroke:#9fc3e6;stroke-width:1.2;vector-effect:non-scaling-stroke}
 .board .guide.mid{stroke-dasharray:5 5}
+.board .fitbox{fill:rgba(29,43,79,.025);stroke:#c5d0d8;stroke-width:1.3;vector-effect:non-scaling-stroke;pointer-events:none}
 .pick{position:relative;aspect-ratio:118/100;min-width:0;border:0;background:transparent;border-radius:8px;padding:1px}
 .picker.low .pick{aspect-ratio:102/122}
 .pick svg{width:100%;height:100%}
 .pick.done g.art path{fill:var(--solved)}
 .pick[aria-current="true"]{box-shadow:0 0 0 2px var(--ink) inset;background:#fff}
+.pick.prac{background:color-mix(in srgb,var(--now) 30%,#fff)}
+.pick.prac.ok{background:color-mix(in srgb,var(--good) 18%,#fff)}
 .btn.fresh{box-shadow:0 0 0 3px var(--now);animation:freshb 1.1s ease-in-out infinite alternate}
 @keyframes freshb{to{box-shadow:0 0 0 6px color-mix(in srgb,var(--now) 40%,transparent)}}
 .bhead{display:flex;align-items:center;gap:8px;flex:none}
@@ -159,6 +162,8 @@ svg.lined{overflow:visible}
 .lvl:disabled{cursor:default;opacity:.6}
 .board-tools{position:absolute;top:8px;right:8px}
 .board-tools.left{right:auto;left:8px}
+body.checking #b-skipbuild{display:none}
+#b-skipbuild{font-size:13px;padding:6px 12px;min-height:34px;opacity:.92}
 .replay{background:var(--pale)!important;border-color:var(--pale-line)!important;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;display:grid;place-items:center;box-shadow:0 2px 6px rgba(20,30,40,.1)}
 .replay svg{width:16px;height:16px;fill:var(--pale-ink)}
 .board-wrap:has(.demo-bar:not([hidden])) .board-tools{display:none}
@@ -248,6 +253,7 @@ svg.lined{overflow:visible}
 
 /* games */
 .prompt{font-family:var(--f-display);font-weight:600;font-size:19px;margin:0;text-wrap:balance}
+.prompt.ginstr{font-size:16px;line-height:1.3;color:var(--ink);cursor:pointer;flex:none}
 .score{font-size:13.5px;color:var(--muted)}
 .score b{color:var(--ink);font-variant-numeric:tabular-nums}
 .timer{height:6px;border-radius:3px;background:var(--line);overflow:hidden;flex:none}
@@ -454,6 +460,7 @@ body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking 
       <div class="board-wrap" id="board-wrap">
         <svg class="board" id="board" viewBox="0 0 360 354" aria-label="Puzzle board. Drag the pieces onto the letter."></svg>
         <div class="burst" id="burst"></div>
+        <div class="board-tools"><button class="skip" id="b-skipbuild" title="Skip Build by drawing some letters">Skip Build ›</button></div>
 
 
         <div class="demo-bar" id="demo-bar" hidden><span class="demo-tag">▶ Demo</span><button class="skip" id="demo-skip">Skip ›</button></div>
@@ -476,7 +483,7 @@ body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking 
     <section class="view" id="view-games" hidden>
       <div class="lvbar" id="g-types" role="tablist" aria-label="Game"></div>
       <div class="row"><span class="lvdots" id="g-levels" role="img"></span><span class="spacer"></span><span class="score" id="g-score"></span></div>
-      <p class="prompt sr" id="g-prompt"></p>
+      <p class="prompt ginstr" id="g-prompt" title="Hear it again"></p>
       <div class="timer" id="g-timer" hidden><i id="g-timer-bar"></i></div>
       <div class="grid" id="g-grid"></div>
       <div class="options" id="g-options"></div>
@@ -685,7 +692,7 @@ function renderPbar(){renderTabBars();const bar=$("pbar");if(!bar)return;try{con
     b.onpointerenter=e=>{if(e.pointerType==="mouse")showTip(b)};b.onpointerleave=()=>hideTip();b.onfocus=()=>showTip(b);b.onblur=hideTip;
     b.onpointerdown=e=>{lastTouch=e.pointerType!=="mouse"}});
   requestAnimationFrame(()=>{try{applyLock();placeToken();checkMilestones()}catch(e){}})}catch(e){/* not ready yet during start-up */}}
-function show(v){const changed=VIEW!==v;VIEW=v;if(v!=="recite"&&typeof R!=="undefined"&&R.paused){R.paused=false;$("view-recite").classList.remove("paused");$("r-resume").hidden=true;$("r-pause").setAttribute("aria-pressed","false")}if(v==="recite"&&changed)setTimeout(()=>typeof autoListen==="function"&&autoListen(),900);if(v!=="recite"&&typeof COACH!=="undefined"&&COACH.active)coachClose();if(v!=="recite"&&typeof LISTEN!=="undefined"&&LISTEN.on)stopListening();$("tab-games").setAttribute("aria-selected",v==="games"||v==="order");setTimeout(renderTabBars,0);setTimeout(renderPbar,0);if(v!=="games")clearTimeout(G.hintT);closeChoices();$("opts").hidden=v==="games"||v==="recite";renderDir();closeSheet();if(v!=="build")stopDemo(true);stopHDemo();views.forEach(x=>{$("view-"+x).hidden=x!==v;(x!=="order")&&$("tab-"+x).setAttribute("aria-selected",x===v||(x==="games"&&v==="order"))});store.set("view",v);
+function show(v){const changed=VIEW!==v;VIEW=v;if(v==="build"&&changed&&typeof promptLevel==="function")promptLevel(true);if(v!=="recite"&&typeof R!=="undefined"&&R.paused){R.paused=false;$("view-recite").classList.remove("paused");$("r-resume").hidden=true;$("r-pause").setAttribute("aria-pressed","false")}if(v==="recite"&&changed)setTimeout(()=>typeof autoListen==="function"&&autoListen(),900);if(v!=="recite"&&typeof COACH!=="undefined"&&COACH.active)coachClose();if(v!=="recite"&&typeof LISTEN!=="undefined"&&LISTEN.on)stopListening();$("tab-games").setAttribute("aria-selected",v==="games"||v==="order");setTimeout(renderTabBars,0);setTimeout(renderPbar,0);if(v!=="games")clearTimeout(G.hintT);closeChoices();$("opts").hidden=v==="games"||v==="recite";renderDir();closeSheet();if(v!=="build")stopDemo(true);stopHDemo();views.forEach(x=>{$("view-"+x).hidden=x!==v;(x!=="order")&&$("tab-"+x).setAttribute("aria-selected",x===v||(x==="games"&&v==="order"))});store.set("view",v);
   if(changed){const el=$("view-"+v);el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter")}
   if(v==="build")requestAnimationFrame(()=>{centerPick();fitPicker()});
   if(v==="build"&&changed&&B.solved)$("b-next").onclick();
@@ -759,7 +766,11 @@ function loadDone(){const v=store.get("bdone4",null);if(v)return v;
 const B={letter:ABC()[idxOf(store.get("bletter","A"))],done:loadDone(),level:(lv=>SHOWN_LV.includes(lv)?lv:FIRST_LV)(Math.min(6,store.get("blevel4",FIRST_LV))),turn:store.get("turn",true),pieces:[],slots:[]};
 const board=$("board");
 const OX=76,OY=14,SC=1.6;let BH=354,LINE=184;
-const doneSet=lv=>new Set(B.done[lv]||[]);
+// letters built on a level, plus those credited by passing a check (Skip Build / Show what I know).
+// Credit counts for progress and unlocking; only letters really built are shown black in the letter picker.
+const BCRED=store.get("bcred",{});
+const doneSet=lv=>new Set((B.done[lv]||[]).concat(BCRED[lv]||[]));
+const builtSet=lv=>new Set(B.done[lv]||[]);
 const countDone=lv=>{const d=doneSet(lv);return ABC().filter(c=>d.has(c)).length};
 const unlocked=lv=>SHOWN_LV.includes(lv); // any level can be chosen; finishing one still moves on to the next
 const SEEN_LV=store.get("seenlv",{});
@@ -785,8 +796,9 @@ function withLines(svg,c,x0,x1){const ext=(x1-x0)*.12;x0-=ext;x1+=ext;
 function pickSVG(c,f=0,lines=true){const H=frameH(c),svg=letterSVG(c,f).replace(`viewBox="0 0 130 ${H}"`,H===100?`viewBox="6 0 118 100"`:`viewBox="14 6 102 122"`);
   return lines?withLines(svg,c,H===100?6:14,H===100?124:116):svg}
 function renderPicker(){
-  const d=doneSet(B.level),n=countDone(B.level);
-  $("picker").innerHTML=ABC().map(c=>`<button class="pick${d.has(c)?" done":""}" data-l="${c}" aria-label="Letter ${c}${d.has(c)?", built":""}" ${c===B.letter?'aria-current="true"':""}>${pickSVG(c)}</button>`).join("");
+  const d=builtSet(B.level),n=countDone(B.level); // black only when really built here; credited letters stay in colour
+  const pr=(()=>{try{return inPractice()?prNow().letters:[]}catch(e){return []}})();
+  $("picker").innerHTML=ABC().map(c=>`<button class="pick${d.has(c)?" done":""}${pr.includes(c)?(PRACTICE.done.includes(c)?" prac ok":" prac"):""}" data-l="${c}" aria-label="Letter ${c}${d.has(c)?", built":""}" ${c===B.letter?'aria-current="true"':""}>${pickSVG(c)}</button>`).join("");
   $("picker").classList.toggle("low",CASE==="low");fitPicker();
   $("picker").querySelectorAll(".pick").forEach(b=>b.onclick=()=>startBuild(b.dataset.l));
   $("b-progress").innerHTML=`Level ${lvNum(B.level)} · <b>${n}</b> of 26 built`;
@@ -838,8 +850,8 @@ function swapShapes(a,b){
     if(hit){hit.setAttribute("x",pc.p[2]-pad);hit.setAttribute("y",pc.p[3]-pad);hit.setAttribute("width",pc.p[4]-pc.p[2]+pad*2);hit.setAttribute("height",pc.p[5]-pc.p[3]+pad*2)}
     place(pc.g,pc)}}
 // the crossbar of lowercase e is right as long as it lies flat: either way round, and drawn in either direction
-// pieces that count as right either way up: the crossbars of e and t, and the slanting strokes of x and v
-const FLIP_OK={e:[1],t:[1,2],x:[0,1,2],v:[0,1]};
+// pieces that count as right either way up: the crossbars of e and t, the slanting strokes of x and v, and the two outer strokes of W
+const FLIP_OK={e:[1],t:[1,2],x:[0,1,2],v:[0,1],W:[0,3]};
 const flipOK=(c,p)=>!!(FLIP_OK[c]&&FLIP_OK[c].some(i=>LETTERS[c][i][1]===p[1]));
 // crossbars can also be drawn in either direction
 function isLevelBar(c,p){return(c==="e"||c==="t")&&flipOK(c,p)}
@@ -853,9 +865,9 @@ function startBuild(c,fromDemo){
   B.letter=c;store.set("bletter",c);
   if(!unlocked(B.level))B.level=FIRST_LV;
   const own=glyph(c),H=frameH(c);
-  const extra=hasPile(B.level)?pickDistractors(c,own.length<=2?2:3):[];
+  const extra=hasPile(B.level)?pickDistractors(c,own.length<=2?4:6):[]; // the pile: twice as many extra pieces as before
   const all=own.map((p,i)=>({p,i,real:true})).concat(extra.map(p=>({p,i:-1,real:false})));
-  const rows=all.length>4?2:1,trayH=rows===2?330:170,draw=isDraw();
+  const rows=all.length>8?3:all.length>4?2:1,trayH=rows===3?420:rows===2?330:170,draw=isDraw();
   // drawing levels: no tray of pieces; the board is just the writing space, so the letter fills as much of the screen as it can
   if(draw){LINE=OY+H*SC+16;BH=LINE;board.setAttribute("viewBox",`30 0 300 ${BH}`)}
   else{LINE=OY+H*SC+26;BH=LINE+trayH;board.setAttribute("viewBox",`0 0 360 ${BH}`)}
@@ -864,7 +876,7 @@ function startBuild(c,fromDemo){
   B.pieces=all.map((o,j)=>{const p=o.p,slot=order[j],r=Math.floor(slot/perRow),col=slot%perRow;
     const cx=(p[2]+p[4])/2,cy=(p[3]+p[5])/2;
     let tx=-50+colW*(col+.5)+(Math.random()-.5)*colW*.25;
-    let ty=(LINE-OY)/SC+(rows===2?52+r*84:55)+(Math.random()-.5)*8;
+    let ty=(LINE-OY)/SC+(rows>=2?52+r*84:55)+(Math.random()-.5)*8;
     if(draw){tx=65+(Math.random()-.5)*60;ty=H+260} // waiting out of sight below the writing space until its part is drawn
         const alt=new Set(own.map((q,j)=>o.real&&twin180(p,q)?j:-1).filter(j=>j>=0));
     const mir=new Set(own.map((q,j)=>o.real&&twinMirror(p,q)?j:-1).filter(j=>j>=0));
@@ -879,7 +891,16 @@ function startBuild(c,fromDemo){
   setBStatus("");
   renderPicker();drawBoard();
   if(isDraw()&&!fromDemo)maybeDemo();
+  if(!fromDemo)promptLevel();
 }
+// a spoken (and shown) prompt for what to do on each Build level, said when a level starts or Build is opened
+const LV_SAY={1:"Build the letter with its pieces.",2:"Now try it without the letter outline.",
+  3:"Build the letter with pieces from the pile.",4:"Now try it without the letter outline.",
+  5:"Draw over the letter, and the pieces fly into place.",6:"Now draw the letter without the outline."};
+let LV_PROMPTED=null;
+function promptLevel(force){const k=CASE+B.level;if(!force&&LV_PROMPTED===k)return;
+  setTimeout(()=>{if(VIEW!=="build"||CHECK.active||CASE+B.level!==k||(typeof lockedHere==="function"&&lockedHere())||!$("ckoffer").hidden)return;
+    LV_PROMPTED=k;sayShow(LV_SAY[B.level],.95)},350)}
 function setBStatus(){} // Build gives no written feedback
 function drawBoard(){
   board.classList.remove("drawmode");
@@ -890,6 +911,7 @@ function drawBoard(){
   ${isDraw()?"":`<line class="tray-line" x1="14" x2="346" y1="${LINE}" y2="${LINE}"/>`}
   <g id="lg" transform="translate(${OX},${OY}) scale(${SC})" class="${B.solved?"solved":""}">
    ${guides(B.letter)}
+   ${isDraw()?fitBox(own):""}
    ${shadow?`<g class="ghost">${own.map(p=>`<path d="${p[1]}"/>`).join("")}</g>`:""}
    <g id="pieces"></g><g id="ink"></g></g>`;
   if(isDraw())prepDraw();
@@ -903,6 +925,9 @@ function drawBoard(){
     if(!pc.placed&&!isDraw())attachDrag(g,pc);
   });
 }
+// drawing levels: a faint box showing the space the letter has to fit in
+function fitBox(own){const pad=8,x0=Math.min(...own.map(p=>p[2]))-pad,y0=Math.min(...own.map(p=>p[3]))-pad,x1=Math.max(...own.map(p=>p[4]))+pad,y1=Math.max(...own.map(p=>p[5]))+pad;
+  return `<rect class="fitbox" x="${x0.toFixed(1)}" y="${y0.toFixed(1)}" width="${(x1-x0).toFixed(1)}" height="${(y1-y0).toFixed(1)}" rx="6"/>`}
 function guides(c){
   const ys=(L,k)=>LETTERS[L].map(p=>p[k]);
   const x1=(14-OX)/SC,x2=(346-OX)/SC,line=(y,cl="")=>`<line class="guide ${cl}" x1="${x1}" x2="${x2}" y1="${y}" y2="${y}"/>`;
@@ -911,7 +936,10 @@ function guides(c){
 }
 /* ---------- Draw level: draw over the letter; each piece flies in once its part is drawn ---------- */
 // shape tolerance (tightened): a narrower brush and more of each piece must be covered; strokes may start anywhere and go either way
-const BRUSH=9,COVER=.7,COVER_END=.52;
+const BRUSH=7.5,COVER=.7,COVER_END=.52;
+// left/right placement is forgiving: the whole letter drawn so far may sit this far to either side (letter units; the letter is about 130 wide).
+// Up/down placement and the shape itself stay strict.
+const XTOL_TRACE=60,XTOL_FREE=90;
 // Handwriting strokes for every letter, in the order and direction they are usually taught.
 // Coordinates are fractions of the letter's own box (0,0 top-left → 1,1 bottom-right).
 // A stroke is a list of points [u,v] and arcs {c:[cu,cv],r:[ru,rv],a:[from,to]} (degrees, 0 = right, 90 = down).
@@ -1004,26 +1032,57 @@ function prepDraw(){
       STROKE_DIRS.forEach(d=>{const q=(d[0]-u)**2+(d[1]-v)**2;if(q<bd){bd=q;best=d}});return best&&!best[4]?[best[2],best[3]]:null});
     s.bidir=isLevelBar(B.letter,own[s.i])});
   board.classList.add("drawmode");
+  B.ink=[];B.sx=0;B.mask=null;STROKE=[];
 }
+// every stroke of this letter, kept so the whole letter can be re-checked at the best left/right offset
+let STROKE=[];
+const brushNow=()=>freeDraw()?((window.__T||{}).br||8.5):BRUSH;
+// a map of where the letter is (widened by the near-enough distance), for quick "is this point on the letter?" checks
+function letterMask(){const r=brushNow()*1.15,key=B.letter+"|"+r;if(B.mask&&B.mask.key===key)return B.mask;
+  const X0=-90,Y0=-50,W=330,H=BH+120,m=new Uint8Array(W*H),rr=r*r,ri=Math.ceil(r);
+  B.slots.forEach(s=>(s.samples||[]).forEach(([u,v])=>{const cu=Math.round(u)-X0,cv=Math.round(v)-Y0;
+    for(let j=-ri;j<=ri;j++)for(let i=-ri;i<=ri;i++){if(i*i+j*j>rr)continue;const a=cu+i,b=cv+j;if(a>=0&&b>=0&&a<W&&b<H)m[b*W+a]=1}}));
+  return B.mask={key,m,X0,Y0,W,H}}
+function onLetter(x,y){const M=letterMask(),a=Math.round(x)-M.X0,b=Math.round(y)-M.Y0;return a>=0&&b>=0&&a<M.W&&b<M.H&&M.m[b*M.W+a]===1}
+// the left/right offset that puts the most of what was drawn onto the letter (the smallest such offset when it is close)
+// (scored by how many parts of the pieces the brush would cover, so the ink has to run down the middle of each piece)
+function bestShift(){const pts=B.ink.flat().filter(p=>!p[3]);if(pts.length<6)return B.sx;
+  const T=freeDraw()?XTOL_FREE:XTOL_TRACE,br=brushNow(),b2=br*br,C=8,grid=new Map(),all=[];
+  B.slots.forEach(s=>(s.samples||[]).forEach(([u,v])=>{const k=Math.floor(u/C)+","+Math.floor(v/C);let a=grid.get(k);if(!a)grid.set(k,a=[]);a.push(all.length);all.push([u,v])}));
+  const seen=new Uint32Array(all.length);let best=-1,stamp=0;const sc=[];
+  for(let dx=-T;dx<=T;dx+=1.5){stamp++;let n=0;
+    for(const p of pts){const x=p[0]+dx,y=p[1],gx=Math.floor(x/C),gy=Math.floor(y/C);
+      for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const a=grid.get((gx+i)+","+(gy+j));if(!a)continue;
+        for(const q of a){if(seen[q]===stamp)continue;const[u,v]=all[q];if((u-x)*(u-x)+(v-y)*(v-y)<b2){seen[q]=stamp;n++}}}}
+    sc.push([dx,n]);if(n>best)best=n}
+  return sc.filter(([,n])=>n>=best*.97).sort((a,b)=>Math.abs(a[0])-Math.abs(b[0]))[0][0]}
+// re-check every stroke of this letter at the best offset; pieces whose parts are now drawn fly in
+function rescore(){const free=freeDraw(),T=window.__T||{},longest=Math.max(...letterStrokes(B.letter).map(pathLen)),sx=B.sx;
+  B.slots.forEach(s=>{if(s.filled||s.flying||!s.samples)return;s.hit.fill(0);s.cov=0;s.pend=null});
+  B.ink.forEach(st=>{FREE.n=FREE.near=FREE.len=0;let prev=null;
+    st.forEach(([x,y,dir,still])=>{if(!still&&prev)FREE.len+=Math.hypot(x-prev[0],y-prev[1]);if(!still)prev=[x,y];coverAt(x+sx,y,dir,still)});
+    if(free){const keep=FREE.n>0&&FREE.near/FREE.n>=(T.keep||.85)&&FREE.len<=longest*1.35+20;
+      B.slots.forEach(s=>{if(!s.pend)return;if(keep)s.pend.forEach(k=>{if(!s.hit[k]){s.hit[k]=1;s.cov++}});s.pend=null})}});
+  FREE.n=FREE.near=FREE.len=0}
 let inkPath=null,inkD="";
-function inkStart(x,y){FREE.n=FREE.near=FREE.len=0;B.slots.forEach(s=>s.pend=null);inkPath=document.createElementNS(NS,"path");inkPath.setAttribute("class","inkline");inkD=`M${x.toFixed(1)} ${y.toFixed(1)}`;inkPath.setAttribute("d",inkD+" l0 .1");board.querySelector("#ink").appendChild(inkPath);lastPt=[x,y];coverAt(x,y,null)}
+function inkStart(x,y){FREE.n=FREE.near=FREE.len=0;B.slots.forEach(s=>s.pend=null);inkPath=document.createElementNS(NS,"path");inkPath.setAttribute("class","inkline");inkD=`M${x.toFixed(1)} ${y.toFixed(1)}`;inkPath.setAttribute("d",inkD+" l0 .1");board.querySelector("#ink").appendChild(inkPath);lastPt=[x,y];STROKE=[[x,y,null,false]];coverAt(x+(B.sx||0),y,null)}
 let lastPt=null;
 function inkTo(x,y){if(!inkPath)return;inkD+=` L${x.toFixed(1)} ${y.toFixed(1)}`;inkPath.setAttribute("d",inkD);
   // direction of travel, measured over a short distance so tiny wobbles don't count
-  const dx=x-lastPt[0],dy=y-lastPt[1],m=Math.hypot(dx,dy);if(m<2.5){coverAt(x,y,null,true);return}
-  lastPt=[x,y];FREE.len+=m;coverAt(x,y,[dx/m,dy/m])}
+  const dx=x-lastPt[0],dy=y-lastPt[1],m=Math.hypot(dx,dy);if(m<2.5){STROKE.push([x,y,null,true]);coverAt(x+(B.sx||0),y,null,true);return}
+  lastPt=[x,y];FREE.len+=m;STROKE.push([x,y,[dx/m,dy/m],false]);coverAt(x+(B.sx||0),y,[dx/m,dy/m])}
 function endStroke(){ // a little more forgiving once a stroke is finished
-  if(freeDraw()){ // drawing freely: a stroke only counts when most of it follows the letter, so scribbling doesn't build it
-    const T=window.__T||{},longest=Math.max(...letterStrokes(B.letter).map(pathLen)),keep=FREE.n>0&&FREE.near/FREE.n>=(T.keep||.8)&&FREE.len<=longest*1.45+24;
-    B.slots.forEach(s=>{if(!s.pend)return;if(keep)s.pend.forEach(k=>{if(!s.hit[k]){s.hit[k]=1;s.cov++}});s.pend=null});
-    FREE.n=FREE.near=FREE.len=0}
-  const need=freeDraw()?((window.__T||{}).end||.52):COVER_END;
+  // drawing freely, a stroke only counts when most of it follows the letter (so scribbling doesn't build it);
+  // the whole letter so far is re-checked at the left/right offset that fits it best
+  if(!B.ink)B.ink=[];if(STROKE.length)B.ink.push(STROKE);STROKE=[];
+  B.sx=bestShift();rescore();
+  const need=freeDraw()?((window.__T||{}).end||.55):COVER_END;
   B.slots.forEach(s=>{if(!s.filled&&!s.flying&&s.samples&&s.samples.length&&s.cov/s.samples.length>=need)flyIn(s)})}
 const FREE={n:0,near:0,len:0};
 const pathLen=pts=>{let l=0;for(let i=1;i<pts.length;i++)l+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);return l};
 function coverAt(x,y,dir,still){
-  const free=freeDraw(),T=window.__T||{},br=free?(T.br||10):BRUSH,minDot=free?(T.dot??.45):.45,need=free?2:COVER;
-  if(free&&!still){FREE.n++;if(B.slots.some(s=>s.samples&&s.samples.some(([u,v])=>(u-x)*(u-x)+(v-y)*(v-y)<(br*1.15)**2)))FREE.near++}
+  const free=freeDraw(),T=window.__T||{},br=brushNow(),minDot=free?(T.dot??.5):.5,need=free?2:COVER;
+  if(free&&!still){FREE.n++;if(onLetter(x,y))FREE.near++}
   B.slots.forEach(s=>{if(s.filled||s.flying||!s.samples)return;
     s.samples.forEach(([u,v],k)=>{if(s.hit[k]||(u-x)*(u-x)+(v-y)*(v-y)>=br*br)return;
       const want=s.dir&&s.dir[k];
@@ -1147,8 +1206,8 @@ function afterPlace(msg){const left=B.slots.filter(s=>!s.filled).length;
   if(left===0)finishLetter()}
 function finishLetter(){
   if(CHECK.active){B.solved=true;board.querySelector("#lg").classList.add("solved");letterResult(true);return} // during a check nothing is recorded
-  const c=B.letter,lv=B.level;B.solved=true;
-  const d=doneSet(lv);d.add(c);B.done[lv]=[...d];store.set("bdone4",B.done);
+  const c=B.letter,lv=B.level;B.solved=true;try{practiseSolved(c)}catch(e){}
+  const d=builtSet(lv);d.add(c);B.done[lv]=[...d];store.set("bdone4",B.done);
   board.querySelector("#lg").classList.add("solved");
   B.pieces.forEach(pc=>{if(!pc.real&&pc.g)pc.g.classList.add("gone")});
   const all=countDone(lv)===26;
@@ -1224,8 +1283,10 @@ function updateNext(){
   let mode="next";
   if(nextLv(B.level)&&allDone(B.level))mode="nextlevel";
   else if(CASE==="up"&&SHOWN_LV.every(lv=>allDone(lv)))mode="lower";
-  const nb=$("b-next");nb.dataset.mode=mode;nb.classList.toggle("fresh",mode!=="next");
-  nb.textContent=mode==="nextlevel"?`Level ${lvNum(nextLv(B.level))} →`:mode==="lower"?"Lowercase →":"Next letter →";
+  try{updateSkipBuild()}catch(e){}
+  let prText="";try{if(inPractice()){mode="practice";const ls=prLeft();prText=ls.length?"Next letter →":"Try again →"}}catch(e){}
+  const nb=$("b-next");nb.dataset.mode=mode;nb.classList.toggle("fresh",mode!=="next"&&!(mode==="practice"&&prLeft().length));
+  nb.textContent=mode==="practice"?prText:mode==="nextlevel"?`Level ${lvNum(nextLv(B.level))} →`:mode==="lower"?"Lowercase →":"Next letter →";
 }
 $("b-turn").onclick=()=>{B.turn=!B.turn;store.set("turn",B.turn);$("b-turn").setAttribute("aria-pressed",B.turn);startBuild(B.letter)};
 $("b-reset").onclick=()=>startBuild(B.letter);
@@ -1233,6 +1294,7 @@ $("b-demo").onclick=()=>{if(VIEW==="build"){startBuild(B.letter);runDemo()}else{
 $("demo-skip").onclick=()=>stopDemo(true);
 $("b-next").onclick=()=>{
   const mode=$("b-next").dataset.mode;
+  if(mode==="practice"){practiceNext();return}
   if(mode==="lower"){B.letter="a";B.level=FIRST_LV;store.set("blevel4",FIRST_LV);setCase("low");maybeDemo();return}
   if(mode==="nextlevel"){B.level=nextLv(B.level);store.set("blevel4",B.level);startBuild(ABC()[0]);updateNext();maybeDemo();return}
   const l=ABC(),d=doneSet(B.level);
@@ -1340,6 +1402,19 @@ function renderLvDots(kind){const lv=G.lv[kind]||0;$("g-levels").setAttribute("a
     kinds.forEach(t=>{G.lv[t]=k;G.run[t]=0});store.set("glv",G.lv);store.set("grun",G.run);newRound()})}
 
 function setG(){} // Games give no written feedback
+// a written instruction for each game and level (Mixed shows the one for the game picked this round)
+const G_INSTR={
+  missing:["One letter is missing. Tap the gap and choose the letter that goes there.",
+    "Two letters are missing. Tap each gap and choose the letter that goes there.",
+    "Three letters are missing. Tap each gap and choose the letter that goes there."],
+  swap:["Two letters next to each other have swapped places. Drag one to where it belongs to swap them back.",
+    "Two letters far apart have swapped places. Drag one to where it belongs to swap them back.",
+    "Two pairs of letters have swapped places. Drag each letter to where it belongs."],
+  flip:["One letter is back to front. Tap it.",
+    "Two letters are the wrong way round: back to front or upside down. Tap them.",
+    "Three letters are the wrong way round: back to front or upside down. Tap them."]};
+const gameInstr=P=>(G_INSTR[P.kind]||[])[G.level]||P.prompt;
+$("g-prompt").onclick=()=>{if(G.cur)say(gameInstr(G.cur),.95)};
 function scoreText(){$("g-score").innerHTML=`Score <b>${G.score}</b> · Streak <b>${G.streak}</b> · Best streak <b>${G.best}</b>`}
 // three levels per game, each a step harder than the last
 function buildPuzzle(kind,seq){
@@ -1381,7 +1456,7 @@ function cover(){clearInterval(G.timer);$("g-timer").hidden=true;$("g-ready").hi
   setTimeout(()=>reveal(true),900)}
 $("g-ready").onclick=cover;
 function reveal(fromCover){
-  const P=G.cur;$("g-prompt").textContent=P.prompt;setG("");$("g-giveup").hidden=false;let html;
+  const P=G.cur;$("g-prompt").textContent=gameInstr(P);setG("");$("g-giveup").hidden=false;let html;
   if(P.kind==="missing")html=P.seq.map((c,i)=>P.blanks.includes(i)?`<div class="tile blank tap" tabindex="0" role="button" aria-label="Missing letter, choose" data-i="${i}"></div>`:`<div class="tile" data-i="${i}">${gSVG(c)}</div>`).join("");
   else if(P.kind==="swap")html=P.shown.map((c,i)=>`<div class="tile tap" tabindex="0" role="button" aria-label="${c}" data-i="${i}">${gSVG(c)}</div>`).join("");
   else html=P.seq.map((c,i)=>`<div class="tile tap" tabindex="0" role="button" aria-label="${c}" data-i="${i}">${gSVG(c,P.flips[i]||0)}</div>`).join("");
@@ -1626,13 +1701,18 @@ const CAPS="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),SMALL="abcdefghijklmnopqrstuvw
 const SEQ=SHOWN_LV.map(l=>"bup"+l).concat(SHOWN_LV.map(l=>"blow"+l),["o0","o1"],
   ["missing","swap","flip"].flatMap(t=>[0,1,2].map(k=>t+k)),[0,1,2,3].map(k=>"r"+k));
 let PROVEN=store.get("proven",{}),ALLOPEN=store.get("allopen",false);
+// one-time: credit given by a passed check used to be stored as "built" (shown black); move it to credit so those letters show in colour again
+if(!store.get("bcredmig",false)){try{[["bup","ABCDEFGHIJKLMNOPQRSTUVWXYZ"],["blow","abcdefghijklmnopqrstuvwxyz"]].forEach(([k,set])=>{if(!PROVEN[k])return;
+  for(let l=1;l<=6;l++){const had=(B.done[l]||[]).filter(c=>set.includes(c));if(!had.length)continue;
+    BCRED[l]=[...new Set((BCRED[l]||[]).concat(had))];B.done[l]=(B.done[l]||[]).filter(c=>!set.includes(c))}});
+  store.set("bcred",BCRED);store.set("bdone4",B.done);setTimeout(()=>{try{renderPicker()}catch(e){}},0)}catch(e){}store.set("bcredmig",true)}
 function doneOf(key){try{let m;
   if(m=key.match(/^b(up|low)(\d)$/))return(m[1]==="up"?CAPS:SMALL).every(c=>doneSet(+m[2]).has(c));
   if(m=key.match(/^o(\d)$/))return !!(ODONE["up"+m[1]]||ODONE["low"+m[1]]);
   if(m=key.match(/^r(\d)$/))return rFrac(+m[1])>=1;
   if(key==="mixed")return !!GDONE.flip2;
   return !!GDONE[key]}catch(e){return false}}
-function unlockedKey(key){if(ALLOPEN||doneOf(key))return true;if(key==="mixed")return doneOf("flip2");
+function unlockedKey(key){if(ALLOPEN||doneOf(key))return true;try{const p=prNow();if(p&&key==="b"+p.c+PRACTICE_LV())return true}catch(e){}if(key==="mixed")return doneOf("flip2");
   const i=SEQ.indexOf(key);return i<=0||doneOf(SEQ[i-1])}
 const provenKey=key=>key.startsWith("bup")?PROVEN.bup:key.startsWith("blow")?PROVEN.blow:/^(o\d|missing|swap|flip|mixed)/.test(key)?PROVEN.games:PROVEN[key];
 function curKey(){
@@ -1680,14 +1760,14 @@ const TRICKY={up:["B","D","P","Q","M","W","N","Z","S","G","J","R"],low:["b","d",
 function pickCheckLetters(c){const tr=shuffle(TRICKY[c].slice()),pool=c==="up"?CAPS:SMALL;
   const out=c==="low"?["b","d"].concat(tr.filter(x=>x!=="b"&&x!=="d").slice(0,2)):tr.slice(0,3);
   shuffle(pool.filter(x=>!out.includes(x))).slice(0,8-out.length).forEach(x=>out.push(x));return shuffle(out)}
-function startCheck(){
-  if(CHECK.active)return;
-  const parts=[];
+function startCheck(buildOnly){
+  if(CHECK.active)return;if(buildOnly&&PRACTICE){PRACTICE=null;store.set("practice",null)}
+  const parts=[];CHECK.build=!!buildOnly;
   const NB=SHOWN_LV.length; // build keys per case at the start of SEQ
   if(!SEQ.slice(0,NB).every(doneOf))parts.push({kind:"draw",c:"up"});
   if(!SEQ.slice(NB,2*NB).every(doneOf))parts.push({kind:"draw",c:"low"});
   const canListen=SR&&location.protocol!=="file:";
-  if(!(SEQ.slice(2*NB,2*NB+13).every(doneOf)&&doneOf("r0")&&doneOf("r1"))&&canListen)parts.push({kind:"say",d:0},{kind:"say",d:1});
+  if(!buildOnly&&!(SEQ.slice(2*NB,2*NB+13).every(doneOf)&&doneOf("r0")&&doneOf("r1"))&&canListen)parts.push({kind:"say",d:0},{kind:"say",d:1});
   $("ckoffer").hidden=true;$("lock").hidden=true;
   if(!parts.length){goKey(firstOpen());return}
   Object.assign(CHECK,{active:true,parts,pi:-1,res:[],saved:{case:CASE,level:B.level,letter:B.letter,dir:DIR,help:R.help},noMic:!canListen});
@@ -1700,7 +1780,7 @@ function nextPart(){
   if(p.kind==="draw"){
     if(CASE!==p.c)setCase(p.c);show("build");B.level=6;CHECK.letters=pickCheckLetters(p.c);CHECK.i=-1;CHECK.marks=[];
     $("ck-skip").hidden=false;$("ck-mic").hidden=true;
-    sayShow("Draw the letters I say, "+(p.c==="up"?"in upper case.":"in lower case."),.95,()=>nextLetter());
+    sayShow((CHECK.build&&CHECK.pi===0?"This is the last Build level. Pass it to skip Build. If not, you'll go back to level 1. ":"")+"Draw the letters I say, "+(p.c==="up"?"in upper case.":"in lower case."),.95,()=>nextLetter());
   }else{
     show("recite");R.help=3;DIR=p.d;renderDir();CHECK.mis=0;CHECK.hes=0;CHECK.hesAt={};
     $("ck-skip").hidden=true;$("ck-mic").hidden=false;ckDots(0,0,[]);startRecite();
@@ -1708,7 +1788,7 @@ function nextPart(){
   }}
 function nextLetter(){
   if(!CHECK.active)return;clearTimeout(CHECK.t);CHECK.i++;ckDots(8,CHECK.i,CHECK.marks);
-  if(CHECK.i>=CHECK.letters.length){const ok=CHECK.marks.filter(Boolean).length;CHECK.res.push({p:CHECK.part,pass:ok>=7});return setTimeout(nextPart,700)}
+  if(CHECK.i>=CHECK.letters.length){const ok=CHECK.marks.filter(Boolean).length;CHECK.res.push({p:CHECK.part,pass:ok>=7,missed:CHECK.letters.filter((L,i)=>!CHECK.marks[i])});return setTimeout(nextPart,700)}
   const L=CHECK.letters[CHECK.i];B.letter=L;startBuild(L,true);sayLetter();
   CHECK.t=setTimeout(()=>letterResult(false),30000)} // 30 seconds a letter, then it counts as not known
 function sayLetter(){if(CHECK.part&&CHECK.part.kind==="draw"){const L=CHECK.letters[CHECK.i];
@@ -1730,7 +1810,7 @@ function showResults(){
   const r=CHECK.res,find=f=>r.find(x=>f(x.p));
   const up=find(p=>p.kind==="draw"&&p.c==="up"),low=find(p=>p.kind==="draw"&&p.c==="low"),fw=find(p=>p.kind==="say"&&p.d===0),bw=find(p=>p.kind==="say"&&p.d===1);
   // credit what was shown
-  const all=(set)=>{for(let l=1;l<=6;l++){const d=doneSet(l);set.forEach(c=>d.add(c));B.done[l]=[...d]}store.set("bdone4",B.done)};
+  const all=(set)=>{for(let l=1;l<=6;l++){const d=new Set(BCRED[l]||[]);set.forEach(c=>d.add(c));BCRED[l]=[...d]}store.set("bcred",BCRED)};
   if(up&&up.pass){all(CAPS);PROVEN.bup=true}
   if(low&&low.pass){all(SMALL);PROVEN.blow=true}
   const said=fw&&fw.pass&&bw&&bw.pass;
@@ -1746,17 +1826,44 @@ function showResults(){
   const any=r.some(x=>x.pass);
   $("ckres").hidden=false;$("ckbar").hidden=true;document.body.classList.remove("checking");CHECK.active=false;
   if(any)burstIn($("ckres").querySelector(".m-card"),["#43b17c","#f4a54b","#4aabe3","#e84a8f","#ffe14f"]);
-  sayShow(any?"Well done! You can skip ahead.":r.length?"Let's practise together, step by step.":"Let's start.");
+  // Skip Build: a case that wasn't passed goes back one level (drawing over the outline) to practise just the letters that weren't drawn well
+  const failed=CHECK.build?r.filter(x=>x.p.kind==="draw"&&!x.pass):[];
+  CHECK.practice=failed.length?failed.map(x=>({c:x.p.c,letters:(x.missed&&x.missed.length?x.missed:CHECK.letters).slice()})):null;
+  sayShow(CHECK.practice?(any?"Well done on the "+(up&&up.pass?"capitals":"lowercase")+"! ":"")+"Not yet. Let's practise the letters that need it, with the outline.":any?"Well done! You can skip ahead.":r.length?"Let's practise together, step by step.":"Let's start.");
   // put things back as they were before the check
   const s=CHECK.saved;B.level=s.level;DIR=s.dir;store.set("dir",DIR);renderDir();R.help=s.help;if(CASE!==s.case)setCase(s.case);
   renderPbar()}
-$("ckres-go").onclick=()=>{$("ckres").hidden=true;goKey(firstOpen())};
+$("ckres-go").onclick=()=>{$("ckres").hidden=true;const pr=CHECK.practice;CHECK.practice=null;CHECK.build=false;
+  if(pr){PRACTICE={queue:pr,done:[]};store.set("practice",PRACTICE);startPractice();return}
+  goKey(firstOpen())};
+/* ---------- Practice after the Skip Build challenge: only the letters that weren't drawn well, one level back (with the outline) ---------- */
+let PRACTICE=store.get("practice",null);
+const PRACTICE_LV=()=>SHOWN_LV[SHOWN_LV.length-2]; // the level before the last: drawing over the outline
+const prNow=()=>PRACTICE&&PRACTICE.queue&&PRACTICE.queue[0]||null;
+const inPractice=()=>{const p=prNow();return !!p&&!CHECK.active&&CASE===p.c&&B.level===PRACTICE_LV()};
+const prLeft=()=>{const p=prNow();return p?p.letters.filter(c=>!PRACTICE.done.includes(c)):[]};
+function startPractice(){const p=prNow();if(!p)return;
+  if(CASE!==p.c)setCase(p.c);show("build");B.level=PRACTICE_LV();store.set("blevel4",B.level);LV_PROMPTED=p.c+B.level;
+  startBuild(prLeft()[0]||p.letters[0]);
+  const ls=prLeft();sayShow("Practise "+(ls.length===1?"this letter":"these letters")+" with the outline: "+ls.map(spoken).join(", ")+".",.95,null,
+    "Practise with the outline: "+ls.join("  "))}
+function practiseSolved(c){if(!inPractice())return;if(!PRACTICE.done.includes(c))PRACTICE.done.push(c);store.set("practice",PRACTICE)}
+// after the last practice letter: the next case's letters, or the challenge again
+function practiceNext(){const p=prNow();if(!p)return false;const ls=prLeft();
+  if(ls.length){startBuild(ls[0]);return true}
+  PRACTICE.queue.shift();PRACTICE.done=[];
+  if(prNow()){store.set("practice",PRACTICE);startPractice();return true}
+  PRACTICE=null;store.set("practice",null);
+  sayShow("Well practised! Now try the last level again.",.95,()=>{if(VIEW==="build"&&!CHECK.active)startCheck(true)});return true}
 // first time the app is opened: start at the beginning, or show what you know
 function maybeOffer(){if(store.get("placed",false))return;store.set("placed",true);
   const anyProgress=SEQ.some(doneOf)||Object.keys(RDONE).length;if(anyProgress)return;
   $("ckoffer").hidden=false;sayShow("Start at the beginning, or show what you know?")}
 $("ck-begin").onclick=()=>{$("ckoffer").hidden=true;goKey("bup"+FIRST_LV)};
 $("ck-know").onclick=()=>startCheck();
+// Skip Build: a "draw some letters" challenge (capitals and/or lowercase, whichever isn't built yet); passing it opens the next section
+$("b-skipbuild").onclick=()=>{stopDemo&&DEMO&&stopDemo(true);startCheck(true)};
+function updateSkipBuild(){const b=$("b-skipbuild");if(b)b.hidden=SEQ.slice(0,2*SHOWN_LV.length).every(doneOf)}
 
 /* ---------- Mastery: all of Recite "None" done → big celebration and a certificate ---------- */
 const MASTER_TEXT="Congratulations! You have mastered all the letters of the alphabet, and the alphabetical sequence.";
