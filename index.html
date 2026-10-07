@@ -204,6 +204,8 @@ body.checking .lvskip{display:none}
 .board .piece .hit{filter:none}
 .board .piece.placed .hit,.board .piece.gone .hit{display:none}
 .board.drawmode{cursor:crosshair}
+#view-build:has(.board.drawmode){overflow:hidden;touch-action:none}
+.board-wrap{touch-action:none;overscroll-behavior:none}
 .board.drawmode .piece{pointer-events:none;cursor:crosshair}
 .board .inkline{fill:none;stroke:#1d2b4f;stroke-opacity:.32;stroke-width:14;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .board .smark{pointer-events:none}
@@ -1261,8 +1263,13 @@ function flyIn(s){
     if(!DEMO)afterPlace();if(B.solved)board.querySelectorAll("#ink .inkline").forEach(l=>l.classList.add("fade"))};
   requestAnimationFrame(step);
 }
+// Some browsers (Safari on iPhone and iPad especially) don't always honour "touch-action:none", so a finger drag on the board
+// would scroll the page and cancel the stroke. Block scrolling and zooming on the board itself.
+["touchstart","touchmove"].forEach(t=>board.addEventListener(t,e=>{if(e.target.closest&&e.target.closest(".board-tools"))return;if(e.cancelable)e.preventDefault()},{passive:false}));
+board.addEventListener("gesturestart",e=>e.preventDefault());
 board.addEventListener("pointerdown",e=>{
   if(!isDraw()||e.target.closest(".board-tools")||e.target.closest(".demo-bar"))return;
+  try{board.setPointerCapture(e.pointerId)}catch(err){}
   // starting to draw during the demo stops it and gives a fresh board straight away
   if(DEMO){const t=DEMO;t.stop=true;t.reset=false;startBuild(B.letter,true)}
   if(B.solved)return;e.preventDefault();
