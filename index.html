@@ -329,7 +329,7 @@ body.checking .lvskip{display:none}
 .ck-dots i.now{background:#fff;box-shadow:0 0 0 3px #e84a8f}.ck-dots i.ok{background:#43b17c}.ck-dots i.miss{background:#f4a54b}
 .ck-mic{flex:1;display:flex;justify-content:center}.ck-mic svg{width:30px;height:30px;fill:#fff;animation:micpulse 1s infinite}
 body.checking .controls,body.checking .pbar,body.checking nav.tabs{pointer-events:none;opacity:.45}
-body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking .microw,body.checking .board-tools,body.checking #r-status{visibility:hidden}
+body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking #r-parts,body.checking #g-rounds,body.checking .microw,body.checking .board-tools,body.checking #r-status{visibility:hidden}
 .probe{position:absolute;inset:0;z-index:27;display:flex;align-items:center;justify-content:center;padding:70px 14px 16px;background:#fff}
 .pr-card{width:min(520px,100%);display:flex;flex-direction:column;gap:18px;align-items:center;text-align:center}
 .pr-show{display:flex;gap:8px;align-items:center;justify-content:center;min-height:90px;flex-wrap:wrap}
@@ -829,7 +829,7 @@ function renderPbar(){renderTabBars();const bar=$("pbar");if(!bar)return;try{con
     b.onpointerenter=e=>{if(e.pointerType==="mouse")showTip(b)};b.onpointerleave=()=>hideTip();b.onfocus=()=>showTip(b);b.onblur=hideTip;
     b.onpointerdown=e=>{lastTouch=e.pointerType!=="mouse"}});
   requestAnimationFrame(()=>{try{applyLock();placeToken();checkLevels();checkMilestones()}catch(e){}})}catch(e){/* not ready yet during start-up */}}
-function show(v){const changed=VIEW!==v;VIEW=v;if(v==="build"&&changed&&typeof promptLevel==="function")promptLevel(true);if(v!=="recite"&&typeof R!=="undefined"&&R.paused){R.paused=false;$("view-recite").classList.remove("paused");$("r-resume").hidden=true;$("r-pause").setAttribute("aria-pressed","false")}if(v==="recite"&&changed)setTimeout(()=>typeof autoListen==="function"&&autoListen(),900);if(v!=="recite"&&typeof COACH!=="undefined"&&COACH.active)coachClose();if(v!=="recite"&&typeof LISTEN!=="undefined"&&LISTEN.on)stopListening();$("tab-games").setAttribute("aria-selected",v==="games"||v==="order");setTimeout(renderTabBars,0);setTimeout(renderPbar,0);if(v!=="games")clearTimeout(G.hintT);closeChoices();$("opts").hidden=false; // on every screen: it holds the player and "Letters to work on"renderDir();closeSheet();if(v!=="build")stopDemo(true);stopHDemo();views.forEach(x=>{$("view-"+x).hidden=x!==v;(x!=="order")&&$("tab-"+x).setAttribute("aria-selected",x===v||(x==="games"&&v==="order"))});store.set("view",v);
+function show(v){const changed=VIEW!==v;VIEW=v;if(v==="build"&&changed&&typeof promptLevel==="function")promptLevel(true);if(v!=="recite"&&typeof R!=="undefined"&&R.paused){R.paused=false;$("view-recite").classList.remove("paused");$("r-resume").hidden=true;$("r-pause").setAttribute("aria-pressed","false")}if(v==="recite"&&changed)setTimeout(()=>typeof autoListen==="function"&&autoListen(),900);if(v!=="recite"&&typeof COACH!=="undefined"&&COACH.active)coachClose();if(v!=="recite"&&typeof LISTEN!=="undefined"&&LISTEN.on)stopListening();$("tab-games").setAttribute("aria-selected",v==="games"||v==="order");setTimeout(renderTabBars,0);setTimeout(renderPbar,0);if(v!=="games")clearTimeout(G.hintT);closeChoices();$("opts").hidden=false;/* on every screen: it holds the player and "Letters to work on" */renderDir();closeSheet();if(v!=="build")stopDemo(true);stopHDemo();views.forEach(x=>{$("view-"+x).hidden=x!==v;(x!=="order")&&$("tab-"+x).setAttribute("aria-selected",x===v||(x==="games"&&v==="order"))});store.set("view",v);
   if(changed){const el=$("view-"+v);el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter")}
   if(v==="build")requestAnimationFrame(()=>{centerPick();fitPicker()});
   if(v==="build"&&changed&&B.solved)$("b-next").onclick();
@@ -1017,23 +1017,25 @@ function startBuild(c,fromDemo){
   const own=glyph(c),H=frameH(c);
   const extra=hasPile(B.level)?pickDistractors(c,own.length<=2?4:6):[]; // the pile: twice as many extra pieces as before
   const all=own.map((p,i)=>({p,i,real:true})).concat(extra.map(p=>({p,i:-1,real:false})));
-  const rows=all.length>8?3:all.length>4?2:1,trayH=rows===3?420:rows===2?330:170,draw=isDraw();
+  // the pile sits in a compact tray: its pieces are shown at TRAY_S size and grow to full size as they are dragged up to the letter,
+  // so the letter gets most of the board
+  const rows=all.length>12?3:all.length>6?2:1,trayH=Math.round((rows*TRAY_ROW*TRAY_S+22)*SC),draw=isDraw();
   // drawing levels: no tray of pieces; the board is just the writing space, so the letter fills as much of the screen as it can
   if(draw){LINE=OY+H*SC+16;BH=LINE;board.setAttribute("viewBox",`30 0 300 ${BH}`)}
   else{LINE=OY+H*SC+26;BH=LINE+trayH;board.setAttribute("viewBox",`0 0 360 ${BH}`)}
   B.slots=own.map((p,i)=>({i,key:p[6],x0:p[2],y0:p[3],x1:p[4],y1:p[5],filled:false}));
-  const order=shuffle([...Array(all.length).keys()]),perRow=Math.ceil(all.length/rows),colW=230/perRow;
+  const order=shuffle([...Array(all.length).keys()]),perRow=Math.ceil(all.length/rows),colW=220/perRow;
   B.pieces=all.map((o,j)=>{const p=o.p,slot=order[j],r=Math.floor(slot/perRow),col=slot%perRow;
     const cx=(p[2]+p[4])/2,cy=(p[3]+p[5])/2;
-    let tx=-50+colW*(col+.5)+(Math.random()-.5)*colW*.25;
-    let ty=(LINE-OY)/SC+(rows>=2?52+r*84:55)+(Math.random()-.5)*8;
+    let tx=-45+colW*(col+.5)+(Math.random()-.5)*colW*.2;
+    let ty=(LINE-OY)/SC+12+(r+.5)*TRAY_ROW*TRAY_S+(Math.random()-.5)*4;
     if(draw){tx=65+(Math.random()-.5)*60;ty=H+260} // waiting out of sight below the writing space until its part is drawn
         const alt=new Set(own.map((q,j)=>o.real&&twin180(p,q)?j:-1).filter(j=>j>=0));
     const mir=new Set(own.map((q,j)=>o.real&&twinMirror(p,q)?j:-1).filter(j=>j>=0));
     if(o.real&&flipOK(c,p))alt.add(o.i);
     let rot=0;if(B.turn){const opts=[45,90,135,180,225,270,315].filter(a=>!(alt.size&&a===180));rot=opts[rand(opts.length)]}
     {const r=rot*Math.PI/180,hw=Math.abs((p[4]-p[2])/2*Math.cos(r))+Math.abs((p[5]-p[3])/2*Math.sin(r));
-     tx=hw>110?65:Math.max(-40+hw,Math.min(170-hw,tx))}
+     const hs=hw*TRAY_S;tx=Math.max(-45+hs,Math.min(175-hs,tx))}
     return {i:o.i,real:o.real,p,key:p[6],x0:p[2],y0:p[3],cx,cy,dx:tx-cx,dy:ty-cy,hx:tx-cx,hy:ty-cy,rot,placed:false,sym:p[7],alt,mir};
   });
   B.solved=false;B.wasted=0;
@@ -1269,7 +1271,10 @@ board.addEventListener("pointerdown",e=>{
   const end=ev=>{if(ev.pointerId!==id)return;inkPath=null;endStroke();window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",end);window.removeEventListener("pointercancel",end)};
   window.addEventListener("pointermove",move);window.addEventListener("pointerup",end);window.addEventListener("pointercancel",end);
 });
-function place(g,pc){g.setAttribute("transform",`translate(${pc.dx},${pc.dy}) rotate(${pc.rot},${pc.cx},${pc.cy})`)}
+const TRAY_S=.5,TRAY_ROW=84;
+// a loose piece in the tray is shown small; it grows smoothly to full size as it is lifted up towards the letter
+function pieceScale(pc){if(pc.placed||pc.flying||isDraw())return 1;const y=OY+(pc.cy+pc.dy)*SC,t=(y-(LINE-46))/46;return t<=0?1:t>=1?TRAY_S:1-(1-TRAY_S)*t}
+function place(g,pc){const k=pieceScale(pc);g.setAttribute("transform",`translate(${pc.dx},${pc.dy}) rotate(${pc.rot},${pc.cx},${pc.cy})`+(k<1?` translate(${pc.cx},${pc.cy}) scale(${k.toFixed(3)}) translate(${-pc.cx},${-pc.cy})`:""))}
 function toLocal(e){const pt=board.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(board.getScreenCTM().inverse());return {x:(p.x-OX)/SC,y:(p.y-OY)/SC}}
 function attachDrag(g,pc){
   // Move and release are tracked on the window for the length of one drag, so a piece
@@ -2030,7 +2035,7 @@ function startCheck(buildOnly){
   const NB=SHOWN_LV.length; // build keys per case at the start of SEQ
   if(!SEQ.slice(0,NB).every(doneOf))parts.push({kind:"draw",c:"up"});
   if(!SEQ.slice(NB,2*NB).every(doneOf))parts.push({kind:"draw",c:"low"});
-  const canListen=SR&&location.protocol!=="file:";
+  const canListen=canListenNow(); // no microphone here (blocked page, no speech recognition, or refused before): the test uses the questions only
   // alphabet knowledge: questions the song can't answer (no microphone needed), then saying it backwards if listening works
   if(!buildOnly&&!(["o0","o1"].every(doneOf)&&G_SHOWN.missing.every(k=>doneOf("missing"+k))))parts.push({kind:"probe"});
   if(!buildOnly&&canListen&&!R_SHOWN.slice(0,2).every(k=>doneOf("r"+k)))parts.push({kind:"say",d:1});
@@ -2127,7 +2132,7 @@ function showResults(){
   store.set("proven",PROVEN);
   // the results screen is the celebration for what the check proved, so those journey stops are marked without popping up
   if(!MSEEN)milesInit();MILES.forEach(m=>{if(m.k!=="rall"&&m.done())MSEEN[m.k]=true});store.set("miles",MSEEN);
-  const row=(icon,res)=>res?`<div class="ck-row">${icon}<span class="${res.pass?"ok":"again"}">${res.pass?"✓":"↻"}</span></div>`:"";
+  const row=(icon,res)=>res&&!res.untested?`<div class="ck-row">${icon}<span class="${res.pass?"ok":"again"}">${res.pass?"✓":"↻"}</span></div>`:"";
   const mic=d=>`<span class="ck-ico"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2"/></svg>${d?"←":"→"}</span>`;
   $("ckres-rows").innerHTML=row(`<span class="ck-ico">${pickSVG("A",0,false)}</span>`,up)+row(`<span class="ck-ico">${pickSVG("a",0,false)}</span>`,low)+row(`<span class="ck-ico pr-ico">A?C</span>`,pr)+row(mic(1),bw);
   const any=r.some(x=>x.pass);
@@ -2170,7 +2175,8 @@ function skipTestResult(P,k){if(!G.test)return false;const t=G.test;G.test=null;
 $("g-skip").onclick=()=>{const g=TYPES[G.type][0];if(g==="mixed")return;stopHDemo&&stopHDemo();G.test={game:g,lv:G.lv[g]||0};newRound();
   sayShow("To skip this level, get this round right first time.",.95);updateSkipBtns()};
 $("r-skip").onclick=()=>{stopHDemo&&stopHDemo();if(R.paused)resumeRecite();if(DIR!==1){DIR=1;store.set("dir",1);renderDir();startOrder();G.cur=null}startRecite();R.test={k:R.help,mis:0};
-  sayShow("To skip this level, say the alphabet backwards, "+(CASE==="up"?"in capital letters":"in lowercase")+", with no mistakes.",.95,()=>typeof autoListen==="function"&&autoListen());updateSkipBtns()};
+  const cl=canListenNow(),cw=CASE==="up"?"in capital letters":"in lowercase";
+  sayShow(cl?"To skip this level, say the alphabet backwards, "+cw+", with no mistakes.":"To skip this level, tap the letters backwards, "+cw+", from "+(CASE==="up"?"Z to A":"z to a")+", with no mistakes.",.95,()=>{if(cl&&!LISTEN.on&&VIEW==="recite")startListening()});updateSkipBtns()};
 function updateSkipBtns(){try{const g=TYPES[G.type][0];$("g-skip").hidden=!!G.test||g==="mixed"||doneOf(g+(G.lv[g]||0));$("r-skip").hidden=!!R.test||doneOf("r"+R.help)}catch(e){}}
 // first time the app is opened: start at the beginning, or show what you know
 function maybeOffer(){if(store.get("placed",false))return;store.set("placed",true);
@@ -2324,6 +2330,8 @@ function micBlockedNotice(){
   showNotice(FRAMED
     ?"<b>The microphone can't be used here.</b> The app is shown inside a frame on this page, and the frame isn't allowed to use the microphone."+own+" You can still tap each letter as you say it."
     :"<b>The microphone isn't allowed.</b> Allow the microphone for this site in the browser's settings (the icon beside the web address), then tap Listen again. You can still tap each letter as you say it.")}
+// can this page listen? (speech recognition exists, the page is on a web address, the microphone isn't blocked here, and it wasn't refused)
+function canListenNow(){try{return !!SR&&location.protocol!=="file:"&&!micPolicyBlocked()&&!LISTEN.denied}catch(e){return false}}
 function startListening(){
   if(!SR){showNotice("<b>Listening isn't available in this browser.</b> Try Chrome, Edge or Safari. You can still tap each letter as you say it.");setMic(false);return}
   if(location.protocol==="file:"){showNotice("<b>Listening needs the app to be opened from a web address</b>, not as a file on this device. Put it on a website (or a local server) and open it from there. You can still tap each letter as you say it.");setMic(false);return}
@@ -2362,7 +2370,11 @@ function startListening(){
         else{LISTEN.consumed[r]=k;break}   // interim guess may still change: wait for more
         LISTEN.consumed[r]=k+1}
     }};
-  rec.onerror=e=>{mlog("error: "+e.error+(e.message?" "+e.message:""));
+  rec.onerror=e=>{
+    // listening refused or impossible: remember it, and if this was the test's spoken part, move on without counting it
+    if(["not-allowed","service-not-allowed","audio-capture"].includes(e.error)&&!(e.error==="not-allowed"&&(document.hidden||/not visible/i.test(e.message||"")))){
+      if(e.error!=="audio-capture"||++LISTEN.capErr>=2){LISTEN.denied=true;
+        if(CHECK.active&&CHECK.part&&CHECK.part.kind==="say"){const p=CHECK.part;LISTEN.on=false;setMic(false);CHECK.res.push({p,pass:false,untested:true});setTimeout(()=>{if(CHECK.part===p)nextPart()},300);return}}}mlog("error: "+e.error+(e.message?" "+e.message:""));
     if(e.error==="not-allowed"&&(document.hidden||/not visible/i.test(e.message||""))){LISTEN.away=true;return}
     if((e.error==="not-allowed"||e.error==="service-not-allowed")&&LISTEN.auto){LISTEN.on=false;setMic(false);setMicState("","");return}
     if(e.error==="not-allowed"||e.error==="service-not-allowed"){LISTEN.on=false;setMic(false);
