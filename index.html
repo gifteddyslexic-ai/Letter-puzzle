@@ -25,7 +25,7 @@ button:focus-visible,.tile:focus-visible{outline:3px solid var(--focus);outline-
 .logo-panel{display:flex;justify-content:center;padding-inline:14px;padding-block:10px;background:#fff;overflow:hidden}
 .brand .lg-ghost path,.brand .lg-ghost rect{fill:#eef1f3;stroke:#c9d2d8;stroke-width:1.2}
 .brand g.art > *{transform-box:fill-box;transform-origin:center}
-.controls{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding-inline:14px;padding-block:6px;background:var(--blue);border-bottom:1px solid var(--blue-line)}
+.controls{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding-inline:14px;padding-block:6px;background:var(--blue);border-bottom:1px solid var(--blue-line)}
 .top{border-bottom:0!important}
 .controls .seg{background:var(--pale);border-color:var(--pale-line)}
 .controls .seg button{color:var(--pale-ink)}
@@ -48,7 +48,7 @@ button:focus-visible,.tile:focus-visible{outline:3px solid var(--focus);outline-
 @media (max-width:420px){.controls .cr{gap:5px}.controls{gap:5px;padding-inline:10px}.controls .icon{width:36px;height:36px}.controls .seg button{padding:5px 8px}.dirbtn{height:36px;padding:0 6px}.dirbtn svg{height:20px}.dirbtn .arr{width:16px}}
 .dirbtn g.art{filter:none}
 .controls .icon,.controls .dirbtn{background:var(--pale);border-color:var(--pale-line)}
-.dirbtn{border:1px solid var(--line);background:#fff;border-radius:12px;height:40px;padding:0 8px;display:flex;align-items:center;gap:1px}
+.dirbtn{justify-self:center;border:1px solid var(--line);background:#fff;border-radius:12px;height:40px;padding:0 8px;display:flex;align-items:center;gap:1px}
 .dirbtn svg{height:24px;width:auto}
 .dirbtn .arr{height:16px;width:22px;stroke:var(--ink);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;margin:0 2px}
 .dirbtn .arr.dots{fill:var(--ink);stroke:none}
@@ -291,6 +291,15 @@ body.checking .lvskip{display:none}
 .gtabs button{border:0;background:transparent;border-radius:9px;padding:8px 2px;font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--pale-ink);min-height:38px}
 .gtabs button[aria-selected="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(20,30,40,.18)}
 .lvdots{display:flex;gap:5px;align-items:center}
+.rounds{display:flex;align-items:center;gap:4px;margin-left:6px;font:600 13px var(--f-display);color:var(--muted)}
+.rounds i{font-style:normal;font-size:18px;line-height:1;color:#d3dbe5}
+.rounds i.on{color:#e8a92a}
+.rounds span{margin-left:4px;white-space:nowrap}
+#o-progress{flex-basis:100%;text-align:center}
+.rparts{display:flex;gap:6px;justify-content:center;flex:none;flex-wrap:wrap}
+.rparts span{font:600 13px var(--f-display);padding:3px 9px;border-radius:999px;background:#f3f4f7;color:var(--muted);border:1px solid var(--line)}
+.rparts span.ok{background:color-mix(in srgb,var(--good) 14%,#fff);color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,#fff)}
+.rparts span.now{border-color:#e84a8f;color:var(--ink)}
 .lvdots,.lvpick{display:flex;gap:2px;align-items:center}
 .lvdot{border:0;background:transparent;width:26px;height:30px;display:grid;place-items:center;padding:0;border-radius:8px}
 .lvdot i{width:11px;height:11px;border-radius:50%;background:var(--line);transition:background .3s,transform .2s}
@@ -362,6 +371,26 @@ body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking 
 .m-stars span:nth-child(2){animation-delay:.15s}.m-stars span:nth-child(3){animation-delay:.3s;font-size:58px}.m-stars span:nth-child(4){animation-delay:.45s}.m-stars span:nth-child(5){animation-delay:.6s}
 .m-text{margin:0;font-family:var(--f-display);font-weight:600;font-size:21px;line-height:1.35;color:var(--ink);text-wrap:balance}
 .lv-card{gap:10px}
+#ma-head{padding:0 34px}
+.ma-card{gap:10px;max-height:calc(100% - 20px);overflow:auto;padding-top:18px}
+.ma-bar{position:relative;height:16px;border-radius:8px;background:#eef1f5;overflow:visible;margin:0 26px 4px 0}
+.ma-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:8px;background:linear-gradient(90deg,#f2b632,#e8a92a);transition:width .6s ease}
+.ma-bar b{position:absolute;right:-26px;top:-7px;font-size:22px;font-weight:400}
+.ma-grid{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}
+.ma-t{position:relative;border-radius:9px;padding:2px 1px 3px;background:#fff;border:1.5px solid transparent;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.ma-t svg{width:100%;height:30px}
+.ma-grid.low .ma-t svg{height:34px}
+.ma-t.gold{background:#fff4d3;border-color:#f2b632}
+.ma-t.gold g.art path{fill:#b07a0a}
+.ma-t.tr{border-color:#f39a3b;box-shadow:0 0 0 2px rgba(243,154,59,.25)}
+.ma-l{display:flex;gap:2px}
+.ma-l i,.ma-key i{width:6px;height:6px;border-radius:50%;background:#dfe4ea;display:inline-block}
+.ma-l i.b.on,.ma-key i.b{background:hsl(150 60% 42%)}.ma-l i.p.on,.ma-key i.p{background:hsl(205 75% 48%)}
+.ma-l i.r.on,.ma-key i.r{background:hsl(330 75% 55%)}.ma-l i.c.on,.ma-key i.c{background:#e8a92a}
+.ma-key{display:flex;flex-wrap:wrap;gap:6px 12px;justify-content:center;font-size:13px;color:var(--muted)}
+.ma-key span{display:inline-flex;align-items:center;gap:5px}.ma-key i{width:9px;height:9px}
+.ma-note{margin:0;font-size:14.5px;color:var(--ink);min-height:1.4em}
+.lv-mast{margin:0;font:600 15px var(--f-display);color:#9a6b07}
 .pl-list{display:flex;flex-direction:column;gap:8px}
 .pl-list button{font:600 19px var(--f-display);padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:#fff;color:var(--ink);text-align:left;display:flex;align-items:center;gap:10px;min-height:54px}
 .pl-list button.cur{border-color:var(--blue);background:#eef3fb}
@@ -471,6 +500,7 @@ body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking 
     <div class="cr">
     <button class="icon replay-top" id="b-demo" aria-label="Watch the demo" title="Watch the demo"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5z"/></svg></button>
     <button class="icon" id="sound" aria-pressed="true" aria-label="Sound"></button>
+    <button class="icon" id="myabc-btn" aria-label="My alphabet" title="My alphabet"><svg viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.6l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z"/></svg></button>
     <button class="icon" id="opts" aria-label="Options"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button></div>
     </div>
   </header>
@@ -515,14 +545,14 @@ body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking 
     <!-- ORDER -->
     <section class="view" id="view-order" hidden>
       <div class="lvbar" id="o-types" role="tablist" aria-label="Game"></div>
-      <div class="row"><h2 class="title" id="o-title">Put letters in correct order</h2><span id="o-ctx" hidden></span><span class="progress" id="o-progress" hidden></span></div>
+      <div class="row"><h2 class="title" id="o-title">Put letters in correct order</h2><span id="o-ctx" hidden></span><span class="progress" id="o-progress"></span></div>
       <div class="grid order" id="o-slots"></div>
     </section>
 
     <!-- GAMES -->
     <section class="view" id="view-games" hidden>
       <div class="lvbar" id="g-types" role="tablist" aria-label="Game"></div>
-      <div class="row"><span class="lvdots" id="g-levels" role="img"></span><span class="spacer"></span><button class="skip lvskip" id="g-skip">Skip level ›</button><span class="score" id="g-score"></span></div>
+      <div class="row"><span class="lvdots" id="g-levels" role="img"></span><span class="rounds" id="g-rounds"></span><span class="spacer"></span><button class="skip lvskip" id="g-skip">Skip level ›</button><span class="score" id="g-score"></span></div>
       <p class="prompt ginstr" id="g-prompt" title="Hear it again"></p>
       <div class="timer" id="g-timer" hidden><i id="g-timer-bar"></i></div>
       <div class="grid" id="g-grid"></div>
@@ -539,6 +569,7 @@ body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking 
     <section class="view" id="view-recite" hidden>
       <h2 class="sr" id="r-title">Say the alphabet</h2>
       <div class="lvbar" id="r-help" role="tablist" aria-label="How many letters to show"></div>
+      <div class="rparts" id="r-parts" aria-label="Parts of this level"></div>
       <div class="microw"><button class="mic" id="r-mic" aria-pressed="false" title="Say the letters out loud and the app will listen"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Listen</span></button><button class="mic" id="r-pause" aria-pressed="false" title="Pause" aria-label="Pause"><svg viewBox="0 0 24 24"><rect x="7" y="5" width="3.5" height="14" rx="1"/><rect x="13.5" y="5" width="3.5" height="14" rx="1"/></svg></button><span class="micstate" id="r-micstate" aria-live="polite"></span><button class="skip lvskip" id="r-skip">Skip level ›</button></div>
       <p class="notice" id="r-notice" hidden></p>
       <pre class="mlog" id="r-log" hidden></pre>
@@ -579,6 +610,7 @@ body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking 
         <p class="lv-well" id="lvd-well"></p>
         <p class="lv-next" id="lvd-next"></p>
         <p class="lv-do" id="lvd-do"></p>
+        <p class="lv-mast" id="lvd-mast"></p>
         <button class="btn m-pdf" id="lvd-go">Go now →</button>
         <div class="lv-timer" aria-hidden="true"><i id="lvd-bar"></i></div>
       </div></div>
@@ -587,6 +619,15 @@ body.checking #picker,body.checking #b-tabs,body.checking #r-help,body.checking 
         <div class="pl-list" id="pl-list"></div>
         <form class="pl-add" id="pl-add"><input id="pl-name" maxlength="20" autocomplete="off" placeholder="New player's name" aria-label="New player's name"><button class="btn" type="submit">Add</button></form>
         <button class="btn ghost" id="pl-skip" hidden>Skip</button>
+      </div></div>
+    <div class="master" id="myabc" hidden role="dialog" aria-modal="true" aria-label="My alphabet"><div class="m-card ma-card">
+        <button class="m-close" id="ma-close" aria-label="Close">&times;</button>
+        <p class="lv-well" id="ma-head"></p>
+        <div class="ma-bar"><i id="ma-fill"></i><b>👑</b></div>
+        <div class="ma-grid" id="ma-up"></div>
+        <div class="ma-grid low" id="ma-low"></div>
+        <div class="ma-key"><span><i class="k b"></i>built</span><span><i class="k p"></i>in order</span><span><i class="k r"></i>remembered</span><span><i class="k c"></i>no mix-ups</span></div>
+        <p class="ma-note" id="ma-note"></p>
       </div></div>
     <div class="caption" id="caption" hidden role="status" aria-live="polite"></div>
     <div class="journey" id="journey" hidden role="dialog" aria-label="Your journey"><div class="j-card" id="j-card"><svg id="j-map" viewBox="0 0 360 240" aria-hidden="true"></svg></div></div>
@@ -639,6 +680,13 @@ const UP="ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
    A letter is "to work on" until it has been got right 3 times in a row in a task the alphabet song can't carry. ---------- */
 let TR={}; // loaded just after storage is set up (below)
 const trSave=()=>store.set("trouble",TR);
+// Mastery of each letter: built (final Build level), placed (in order, first time), recalled (said or found when hidden or going backwards), and clear (no open confusion)
+let MA={p:{},r:{}};const maSave=()=>store.set("mast",MA);
+const maPlaced=c=>{if(!c||HDEMO||DEMO||MA.p[c])return;MA.p[c]=1;maSave()},maRecalled=c=>{if(!c||HDEMO||DEMO||MA.r[c])return;MA.r[c]=1;maSave()};
+const maBuilt=c=>{try{return doneSet(SHOWN_LV[SHOWN_LV.length-1]).has(c)}catch(e){return false}};
+const maState=c=>({b:maBuilt(c),p:!!MA.p[c],r:!!MA.r[c],c:!trOn(c)&&!!(MA.p[c]||MA.r[c]||maBuilt(c))});
+const mastered=c=>{const m=maState(c);return m.b&&m.p&&m.r&&m.c};
+const masteredCount=()=>UP.concat(UP.map(c=>c.toLowerCase())).filter(mastered).length;
 const trOn=c=>{const t=TR[c];return !!t&&(t.m>0||t.p>=2)&&t.s<3};
 function trMiss(c,kind,other){if(!c||HDEMO||DEMO)return;const t=TR[c]=TR[c]||{m:0,p:0,s:0,k:{},w:{}};
   if(kind==="pause")t.p++;else{t.m++;t.k[kind]=(t.k[kind]||0)+1;if(other&&other!==c)t.w[other]=(t.w[other]||0)+1}
@@ -646,8 +694,10 @@ function trMiss(c,kind,other){if(!c||HDEMO||DEMO)return;const t=TR[c]=TR[c]||{m:
 function trHit(c){const t=TR[c];if(!t||HDEMO||DEMO)return;if(t.s<3){t.s++;t.t=Date.now();trSave()}}
 const troubleOf=list=>list.filter(trOn).sort((a,b)=>(TR[b].m+TR[b].p/2)-(TR[a].m+TR[a].p/2));
 // pick k items, favouring the ones that need work (each pick has a 60% chance to come from them while any are left)
-function pickPref(items,k,isPref){const pref=shuffle(items.filter(isPref)),rest=shuffle(items.filter(x=>!isPref(x))),out=[];
-  while(out.length<k&&(pref.length||rest.length)){out.push((pref.length&&(Math.random()<.6||!rest.length))?pref.shift():rest.shift())}return out}
+function pickPref(items,k,isPref,maxPref=Infinity){const pref=shuffle(items.filter(isPref)),rest=shuffle(items.filter(x=>!isPref(x))),out=[];let np=0;
+  while(out.length<k&&(pref.length||rest.length)){const usePref=pref.length&&np<maxPref&&(Math.random()<.6||!rest.length);if(usePref){out.push(pref.shift());np++}else if(rest.length)out.push(rest.shift());else break}return out}
+// how many letters that need work may go into one game round: one at most, and none straight after a hard round
+const prefCap=()=>((G.bad||{})[G.curGame]||0)>=1?0:1;
 const $=id=>document.getElementById(id);
 const rand=n=>Math.floor(Math.random()*n);
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -659,7 +709,7 @@ const gstore={get(k,d){try{const v=localStorage.getItem("lg-"+k);return v!==null
 let PLAYERS=gstore.get("players",[]);const PLAYER=String(gstore.get("player","1"));
 const PFX=PLAYER==="1"?"lg-":"lg-p"+PLAYER+"-";
 const store={get(k,d){try{const v=localStorage.getItem(PFX+k);return v!==null?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(PFX+k,JSON.stringify(v))}catch(e){}}};
-TR=store.get("trouble",{});
+TR=store.get("trouble",{});MA=Object.assign({p:{},r:{}},store.get("mast",{}));
 const isUp=c=>c===c.toUpperCase();
 const frameH=c=>isUp(c)?100:130;
 
@@ -779,7 +829,7 @@ function renderPbar(){renderTabBars();const bar=$("pbar");if(!bar)return;try{con
     b.onpointerenter=e=>{if(e.pointerType==="mouse")showTip(b)};b.onpointerleave=()=>hideTip();b.onfocus=()=>showTip(b);b.onblur=hideTip;
     b.onpointerdown=e=>{lastTouch=e.pointerType!=="mouse"}});
   requestAnimationFrame(()=>{try{applyLock();placeToken();checkLevels();checkMilestones()}catch(e){}})}catch(e){/* not ready yet during start-up */}}
-function show(v){const changed=VIEW!==v;VIEW=v;if(v==="build"&&changed&&typeof promptLevel==="function")promptLevel(true);if(v!=="recite"&&typeof R!=="undefined"&&R.paused){R.paused=false;$("view-recite").classList.remove("paused");$("r-resume").hidden=true;$("r-pause").setAttribute("aria-pressed","false")}if(v==="recite"&&changed)setTimeout(()=>typeof autoListen==="function"&&autoListen(),900);if(v!=="recite"&&typeof COACH!=="undefined"&&COACH.active)coachClose();if(v!=="recite"&&typeof LISTEN!=="undefined"&&LISTEN.on)stopListening();$("tab-games").setAttribute("aria-selected",v==="games"||v==="order");setTimeout(renderTabBars,0);setTimeout(renderPbar,0);if(v!=="games")clearTimeout(G.hintT);closeChoices();$("opts").hidden=v==="games"||v==="recite";renderDir();closeSheet();if(v!=="build")stopDemo(true);stopHDemo();views.forEach(x=>{$("view-"+x).hidden=x!==v;(x!=="order")&&$("tab-"+x).setAttribute("aria-selected",x===v||(x==="games"&&v==="order"))});store.set("view",v);
+function show(v){const changed=VIEW!==v;VIEW=v;if(v==="build"&&changed&&typeof promptLevel==="function")promptLevel(true);if(v!=="recite"&&typeof R!=="undefined"&&R.paused){R.paused=false;$("view-recite").classList.remove("paused");$("r-resume").hidden=true;$("r-pause").setAttribute("aria-pressed","false")}if(v==="recite"&&changed)setTimeout(()=>typeof autoListen==="function"&&autoListen(),900);if(v!=="recite"&&typeof COACH!=="undefined"&&COACH.active)coachClose();if(v!=="recite"&&typeof LISTEN!=="undefined"&&LISTEN.on)stopListening();$("tab-games").setAttribute("aria-selected",v==="games"||v==="order");setTimeout(renderTabBars,0);setTimeout(renderPbar,0);if(v!=="games")clearTimeout(G.hintT);closeChoices();$("opts").hidden=false; // on every screen: it holds the player and "Letters to work on"renderDir();closeSheet();if(v!=="build")stopDemo(true);stopHDemo();views.forEach(x=>{$("view-"+x).hidden=x!==v;(x!=="order")&&$("tab-"+x).setAttribute("aria-selected",x===v||(x==="games"&&v==="order"))});store.set("view",v);
   if(changed){const el=$("view-"+v);el.classList.remove("enter");void el.offsetWidth;el.classList.add("enter")}
   if(v==="build")requestAnimationFrame(()=>{centerPick();fitPicker()});
   if(v==="build"&&changed&&B.solved)$("b-next").onclick();
@@ -1413,7 +1463,7 @@ $("b-hint").onclick=()=>{if(B.solved||DEMO)return;const pc=B.pieces.find(p=>p.re
 const O={range:3,seq:[],arr:[],mistakes:0};
 function startOrder(){
   O.seq=alphabet(3); // always the full alphabet, A to Z, in both directions
-  O.mistakes=0;
+  O.mistakes=0;O.badL={};
   let arr;do{arr=shuffle(O.seq)}while(arr.some((c,i)=>c===O.seq[i])&&O.seq.length>1&&Math.random()<.97);
   O.arr=arr;
   const ends=CASE==="up"?["A","Z"]:["a","z"];$("o-title").textContent=DIR?`Place letters from ${ends[1]} back to ${ends[0]}`:"Put letters in correct order";
@@ -1452,7 +1502,7 @@ function flip(before){ // animate tiles from old rects to new
   $("o-slots").querySelectorAll(".tile").forEach(t=>{const r0=before[t.dataset.l];if(!r0)return;const r1=t.getBoundingClientRect();
     const dx=r0.left-r1.left,dy=r0.top-r1.top;if(dx||dy)t.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"none"}],{duration:280,easing:"ease-out"})});
 }
-function orderSwap(from,to){
+function orderSwap(from,to){if(!(O.badL&&O.badL[O.arr[from]]))maPlaced(O.arr[from]);
   const rects={};$("o-slots").querySelectorAll(".tile").forEach(t=>rects[O.arr[+t.dataset.i]]=t.getBoundingClientRect());
   const c=O.arr[from];[O.arr[from],O.arr[to]]=[O.arr[to],O.arr[from]];renderOrder();
   $("o-slots").querySelectorAll(".tile").forEach(t=>t.dataset.l=O.arr[+t.dataset.i]);flip(rects);
@@ -1475,7 +1525,7 @@ function outOfTurn(t,want){t.classList.remove("shake");void t.offsetWidth;t.clas
   const k=O.seq.indexOf(want),first=O.seq.every((x,i)=>i<=k||!okAt(i));
   sayShow((first?"Start with ":"Next is ")+spoken(want)+".",.95,null,(first?"Start with ":"Next: ")+want);
   const el=$("o-slots").children[k];if(el){el.classList.remove("next-nudge");void el.offsetWidth;el.classList.add("next-nudge")}}
-function orderWrong(t,c,i){trMiss(c,"order",O.seq[i]);t.classList.remove("shake");void t.offsetWidth;t.classList.add("shake");O.mistakes++;
+function orderWrong(t,c,i){trMiss(c,"order",O.seq[i]);(O.badL=O.badL||{})[c]=1;t.classList.remove("shake");void t.offsetWidth;t.classList.add("shake");O.mistakes++;
   const prev=O.seq[i-1],next=O.seq[i+1];
   setOStatus(prev&&next?`${c} doesn't go between ${prev} and ${next}.`:prev?`${c} doesn't come after ${prev}.`:`${c} doesn't come first.`,"bad")}
 function orderDrag(t){
@@ -1508,7 +1558,10 @@ function renderGameControls(){
   renderTabBars();
 }
 // level climbs by itself: three good rounds in a row move a game up a level (up to 3)
-function renderLvDots(kind){const lv=G.lv[kind]||0,L=G_SHOWN[kind]||[0,1,2];$("g-levels").setAttribute("aria-label",`Level ${gNum(kind,lv)} of ${L.length}`);
+// good rounds so far on this level: three pips that fill in, and the words
+function renderRounds(kind){const el=$("g-rounds");if(!el)return;const done=GDONE[kind+(G.lv[kind]||0)],n=done?3:Math.min(3,G.run[kind]||0);
+  el.innerHTML=[0,1,2].map(i=>`<i class="${i<n?"on":""}">★</i>`).join("")+`<span>${done?"Level done":n+" of 3 good rounds"}</span>`;el.setAttribute("aria-label",done?"Level done":n+" of 3 good rounds")}
+function renderLvDots(kind){renderRounds(kind);const lv=G.lv[kind]||0,L=G_SHOWN[kind]||[0,1,2];$("g-levels").setAttribute("aria-label",`Level ${gNum(kind,lv)} of ${L.length}`);
   $("g-levels").innerHTML=L.map((k,i)=>`<button class="lvdot${k===lv?" on":""}${k<lv?" done":""}" data-k="${k}" aria-label="Level ${i+1}" aria-pressed="${k===lv}"><i></i></button>`).join("");
   $("g-levels").querySelectorAll("button").forEach(b=>b.onclick=()=>{const k=+b.dataset.k,kinds=TYPES[G.type][0]==="mixed"?["missing","swap","flip"]:[kind];
     kinds.forEach(t=>{G.lv[t]=k;G.run[t]=0});store.set("glv",G.lv);store.set("grun",G.run);newRound()})}
@@ -1532,19 +1585,19 @@ function scoreText(){$("g-score").innerHTML=`Score <b>${G.score}</b> · Streak <
 function buildPuzzle(kind,seq){
   const lv=G.level,n=seq.length,idx=[...Array(n).keys()];
   if(kind==="missing"){ // 1, 2 or 3 letters hidden
-    const k=Math.min(lv+1,Math.max(1,n-2)),pos=pickPref(idx,k,i=>trOn(seq[i])).sort((a,b)=>a-b);
+    const k=Math.min(lv+1,Math.max(1,n-2)),pos=pickPref(idx,k,i=>trOn(seq[i]),prefCap()).sort((a,b)=>a-b);
     return {kind,seq,blanks:pos,filledB:[],prompt:"Which letters are hiding?"}}
   if(kind==="swap"){ // L1 next-door pair, L2 a pair far apart, L3 two separate pairs
     const shown=seq.slice(),wrong=[],used=new Set();
     const pairs=lv===2&&n>=6?2:1;
     for(let p=0;p<pairs;p++){let a,b,tries=0;
-      do{const tl=idx.filter(i=>trOn(seq[i])&&!used.has(i));a=tl.length&&Math.random()<.6?tl[rand(tl.length)]:rand(n);if(lv===0&&a===n-1&&Math.random()<.5)a=n-2;b=lv===0?a+1:rand(n);tries++}
+      do{const tl=prefCap()&&p===0?idx.filter(i=>trOn(seq[i])&&!used.has(i)):[];a=tl.length&&Math.random()<.6?tl[rand(tl.length)]:rand(n);if(lv===0&&a===n-1&&Math.random()<.5)a=n-2;b=lv===0?a+1:rand(n);tries++}
       while((b>=n||b===a||used.has(a)||used.has(b)||(lv>0&&n>3&&Math.abs(b-a)<2))&&tries<200);
       [shown[a],shown[b]]=[shown[b],shown[a]];used.add(a);used.add(b);wrong.push(a,b)}
     return {kind,seq,shown,wrong:wrong.sort((x,y)=>x-y),picked:[],prompt:"Tap the letters that are out of place."}}
   // flip: L1 one mirrored letter, L2 two (mirrored or upside down), L3 three
   const upsideOk=lv>0,cand=idx.filter(i=>!NO_MIRROR.has(seq[i])||(upsideOk&&!NO_UPSIDE.has(seq[i])));
-  const k=Math.min(lv+1,cand.length),pos=pickPref(cand,k,i=>trOn(seq[i])),flips={};
+  const k=Math.min(lv+1,cand.length),pos=pickPref(cand,k,i=>trOn(seq[i]),prefCap()),flips={};
   pos.forEach(i=>{const c=seq[i],o=[];if(!NO_MIRROR.has(c))o.push(1);if(upsideOk&&!NO_UPSIDE.has(c))o.push(2);flips[i]=o[rand(o.length)]});
   return {kind,seq,flips,found:[],prompt:"Tap the letters that are the wrong way round."};
 }
@@ -1554,7 +1607,7 @@ function newRound(){
   if(game==="sf"){kind=G.sfLast==="swap"?"flip":G.sfLast==="flip"?"swap":["swap","flip"][rand(2)];G.sfLast=kind}
   // missing letter: always the full alphabet, straight in with no look-first phase
   const seq=alphabet(3),look=false; // laid out A to Z in both directions // always the full alphabet, no look-first phase
-  closeChoices();$("g-status").innerHTML="";renderCtx();G.level=G.lv[game==="mixed"?kind:game]||0;renderLvDots(game==="mixed"?kind:game);setTimeout(renderPbar,0);G.cur=buildPuzzle(kind,seq);G.cur.game=game==="mixed"?kind:game;G.cur.solved=false;G.cur.tries=0;
+  closeChoices();$("g-status").innerHTML="";renderCtx();G.curGame=game==="mixed"?kind:game;G.level=G.lv[G.curGame]||0;renderLvDots(game==="mixed"?kind:game);setTimeout(renderPbar,0);G.cur=buildPuzzle(kind,seq);G.cur.game=game==="mixed"?kind:game;G.cur.solved=false;G.cur.tries=0;
   $("g-next").hidden=true;$("g-giveup").hidden=true;$("g-options").innerHTML="";scoreText();
   $("g-grid").className="grid fit"+(CASE==="low"?" low":"");
   if(look){
@@ -1592,7 +1645,7 @@ function openChoices(i){
   closeChoices();
   const ans=P.seq[i],L=ABC(),idx=L.indexOf(ans),pool=[];
   for(let d=1;d<=5;d++)[idx-d,idx+d].forEach(j=>{if(j>=0&&j<26&&!pool.includes(L[j]))pool.push(L[j])});
-  const opts=shuffle([ans,...shuffle(pool.slice(0,6)).slice(0,4)]);
+  const easy=((G.bad||{})[P.game||P.kind]||0)>=2,opts=shuffle([ans,...shuffle(pool.slice(0,easy?3:6)).slice(0,easy?2:4)]); // after two hard rounds in a row: 3 letters to choose from instead of 5
   const t=$("g-grid").querySelector(`[data-i="${i}"]`),r=t.getBoundingClientRect(),c=$("g-choices");t.classList.add("open");
   const w=Math.max(52,Math.min(72,r.width*1.15)),h=w*5+4*6+12;
   c.style.width=w+12+"px";
@@ -1607,7 +1660,7 @@ function nudge(el){el.classList.remove("shake");void el.offsetWidth;el.classList
 function pickChoice(i,b){
   const P=G.cur;if(P.solved)return;const ans=P.seq[i],c=b.dataset.l;
   if(c!==ans){P.tries++;nudge(b);trMiss(ans,"missing",c);(P.bad=P.bad||{})[i]=1;return}
-  if(!(P.bad&&P.bad[i]))trHit(ans);
+  if(!(P.bad&&P.bad[i])){trHit(ans);maPlaced(ans)}
   armHint();P.filledB.push(i);closeChoices();const t=$("g-grid").querySelector(`[data-i="${i}"]`);t.className="tile right";t.innerHTML=gSVG(ans);t.onclick=null;say(spoken(ans));
   if(P.filledB.length===P.blanks.length)win("");else markGaps();
 }
@@ -1675,11 +1728,17 @@ const PRAISE={3:["Brilliant!","Amazing!","Fantastic!","Superstar!","Excellent!",
   1:["You did it!","Well done for keeping going!","You got there!","Good effort!"]};
 let lastPraise="";
 function pickPraise(stars){const list=PRAISE[stars].filter(p=>p!==lastPraise),p=list[rand(list.length)];lastPraise=p;return p}
-function cheer(stars){const p=pickPraise(stars);
-  setTimeout(()=>{if(VIEW==="games")say(p,.95)},650)}
+function cheer(stars){const p=pickPraise(stars),extra=G.roundMsg||"";G.roundMsg="";
+  setTimeout(()=>{if(VIEW==="games")say(p+(extra?" "+extra:""),.95)},650);
+  if(extra)setTimeout(()=>{if(VIEW==="games"&&!LVCARD.busy)sayShow(extra,.95,null,extra)},700)}
 function win(msg){
   clearTimeout(G.hintT);const P=G.cur;setTimeout(renderPbar,0);
-  if(!HDEMO){const k=P.game||P.kind;if(skipTestResult(P,k)){}else if(P.tries<=1){G.run[k]=(G.run[k]||0)+1;if(G.run[k]>=3){GDONE[k+G.lv[k]]=true;store.set("gdone",GDONE);{const nl=G_SHOWN[k][G_SHOWN[k].indexOf(G.lv[k])+1];if(nl!==undefined){G.lv[k]=nl;G.run[k]=0}else G.run[k]=3}}}else if(!GDONE[k+G.lv[k]])G.run[k]=0;
+  if(!HDEMO){const k=P.game||P.kind;if(skipTestResult(P,k)){}else if(P.tries<=1){G.bad=G.bad||{};G.bad[k]=0;G.run[k]=(G.run[k]||0)+1;
+      if(G.run[k]>=3){GDONE[k+G.lv[k]]=true;store.set("gdone",GDONE);{const nl=G_SHOWN[k][G_SHOWN[k].indexOf(G.lv[k])+1];if(nl!==undefined){G.lv[k]=nl;G.run[k]=0}else G.run[k]=3}}
+      else G.roundMsg=G.run[k]===1?"That's one good round. Two more to finish this level!":"That's two good rounds. One more to finish this level!"}
+    else{G.bad=G.bad||{};G.bad[k]=(G.bad[k]||0)+1;if(!GDONE[k+G.lv[k]]&&(G.run[k]||0)>0)G.roundMsg="Good try! That round doesn't count, but you keep your good rounds.";
+      if(G.bad[k]===2)G.roundMsg=(G.roundMsg?G.roundMsg+" ":"")+"Next round, there will be fewer letters to choose from."}
+    renderRounds(k);
     store.set("glv",G.lv);store.set("grun",G.run)}P.solved=true;$("g-options").innerHTML="";$("g-giveup").hidden=true;
   const stars=P.tries===0?3:P.tries<3?2:1;G.score+=stars;G.streak=P.tries===0?G.streak+1:0;
   if(G.streak>G.best){G.best=G.streak;store.set("best",G.best)}
@@ -1705,12 +1764,14 @@ const R={help:store.get("rhelp",0),seq:[],hidden:[],pos:0};
 const HELP=["Show all","Most","Few","None"];
 R.help=shownAtOrAfter(R_SHOWN,R.help);
 ["missing","swap","flip","sf"].forEach(t=>{const k=G.lv[t]||0;if(!G_SHOWN[t].includes(k))G.lv[t]=shownAtOrAfter(G_SHOWN[t],k)});
+function renderRParts(){const el=$("r-parts");if(!el)return;const lab={up0:"A to Z",up1:"Z to A",low0:"a to z",low1:"z to a"};
+  el.innerHTML=RSTEPS.map(([c,d])=>{const ok=rStepDone(R.help,c,d),now=c===CASE&&d===DIR;return `<span class="${ok?"ok":""}${now?" now":""}">${ok?"✓ ":""}${lab[c+d]}</span>`}).join("")}
 function startRecite(){
   R.seq=sequence(3);R.pos=0;
   R.hidden=R.seq.map((c,i)=>R.help===0?false:i>0&&trOn(c)?true:R.help===1?i%3===2:R.help===2?i%4!==0:i>0); // letters to work on are always hidden (from level 2), so they have to be recalled // "None" still shows the first letter, in colour, as a reminder of the direction
   renderTabBars();
   $("r-title").textContent=DIR?"Say the alphabet backwards":"Say the alphabet";
-  $("r-status").innerHTML="";renderRecite();renderPbar();if(typeof LISTEN!=="undefined"){LISTEN.consumed={};LISTEN.lastProgress=performance.now()}
+  $("r-status").innerHTML="";renderRecite();renderRParts();renderPbar();if(typeof LISTEN!=="undefined"){LISTEN.consumed={};LISTEN.lastProgress=performance.now()}
 }
 function setR(){}
 function renderRecite(){
@@ -1729,7 +1790,7 @@ function reciteTap(t,quiet){
   if(i!==R.pos){reciteEvent("mistake",{expected:R.seq[R.pos],heard:c,position:R.pos});return}
   t.classList.remove("covered","now");t.classList.add("said");t.setAttribute("aria-label",c);
   if(!quiet)say(spoken(c),1);try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
-  reciteEvent("correct",{expected:c,position:i});
+  reciteEvent("correct",{expected:c,position:i});if(!HDEMO&&(DIR||R.hidden[i]))maRecalled(c);
   R.pos++;const n=$("r-grid").children[R.pos];if(n)n.classList.add("now");
   if(R.pos>=R.seq.length&&CHECK.active){checkReciteDone();return}
   if(R.pos>=R.seq.length&&!HDEMO&&R.test){const pass=!R.test.mis&&R.test.k===R.help;R.test=null;
@@ -1863,7 +1924,7 @@ function caseCard(nx){
 function showLevelCard(well,next,todo,go){
   LVCARD.busy=true;LVCARD.go=go;clearTimeout(B.nextT);clearTimeout(G.nextT);
   setTimeout(()=>{if(!LVCARD.busy||LVCARD.go!==go)return;
-    $("lvd-well").textContent=well;$("lvd-next").innerHTML=next[0]+"<b>"+next[1]+"</b>";$("lvd-do").textContent=todo;
+    $("lvd-well").textContent=well;$("lvd-next").innerHTML=next[0]+"<b>"+next[1]+"</b>";$("lvd-do").textContent=todo;try{const n=masteredCount();$("lvd-mast").textContent=n?"👑 You've mastered "+n+" of 52 letters.":""}catch(e){}
     const ov=$("lvdone");ov.hidden=false;burstIn(ov.querySelector(".m-card"),["#43b17c","#f4a54b","#4aabe3","#e84a8f","#ffe14f"]);
     if(typeof pauseListening==="function")pauseListening(30000);
     // it carries on by itself once the message has been read out and the bar has filled (or straight away with Go now)
@@ -2035,7 +2096,7 @@ function sayProbe(){const it=CHECK.items&&CHECK.items[CHECK.i];if(!it)return;say
 function probeAnswer(b){if(!CHECK.active||!CHECK.items)return;clearTimeout(CHECK.t);const it=CHECK.items[CHECK.i];if(!it||it.busy)return;
   const got=b?b.dataset.l:null,ok=got===it.ans;
   $("pr-opts").querySelectorAll("button").forEach(x=>{if(x.dataset.l===it.ans)x.classList.add("right");else if(x===b)x.classList.add("wrong")});
-  if(ok){trHit(it.ans);chime()}else{trMiss(it.ans,"probe",got);it.bad=true;if(it.t==="nb")trMiss(it.at,"probe")}
+  if(ok){trHit(it.ans);if(it.t!=="mir")maPlaced(it.ans);chime()}else{trMiss(it.ans,"probe",got);it.bad=true;if(it.t==="nb")trMiss(it.at,"probe")}
   const q=$("pr-show").querySelector(".pt.q");if(q){q.outerHTML=ptile(it.ans,"q ok")}
   it.busy=true;setTimeout(()=>{it.busy=false;
     if(it.t==="seq"&&it.step<it.n-1){it.step++;showProbe(it);return}
@@ -2059,9 +2120,10 @@ function showResults(){
   if(low&&low.pass){all(SMALL);PROVEN.blow=true}
   // the questions show the order of the alphabet: Order and Missing letters are opened. Mirror letters are still practised in Swapped & flipped.
   if(pr&&pr.pass){["up","low"].forEach(c=>{ODONE[c+0]=ODONE[c+1]=true});store.set("odone",ODONE);
+    UP.concat(UP.map(c=>c.toLowerCase())).forEach(c=>MA.p[c]=1);maSave();
     [0,1,2].forEach(k=>GDONE["missing"+k]=true);G.lv.missing=G_SHOWN.missing[G_SHOWN.missing.length-1];store.set("gdone",GDONE);store.set("glv",G.lv);PROVEN.games=true}
   // saying it backwards from memory: the first two Recite levels are opened
-  if(bw&&bw.pass){[0,1].forEach(k=>RSTEPS.forEach(([c,d])=>RDONE[rKey(k,c,d)]=true));store.set("rdone",RDONE);PROVEN.r0=PROVEN.r1=true}
+  if(bw&&bw.pass){UP.concat(UP.map(c=>c.toLowerCase())).forEach(c=>MA.r[c]=1);maSave();[0,1].forEach(k=>RSTEPS.forEach(([c,d])=>RDONE[rKey(k,c,d)]=true));store.set("rdone",RDONE);PROVEN.r0=PROVEN.r1=true}
   store.set("proven",PROVEN);
   // the results screen is the celebration for what the check proved, so those journey stops are marked without popping up
   if(!MSEEN)milesInit();MILES.forEach(m=>{if(m.k!=="rall"&&m.done())MSEEN[m.k]=true});store.set("miles",MSEEN);
@@ -2535,6 +2597,18 @@ $("b-turn").setAttribute("aria-pressed",B.turn);renderShapes();startBuild(B.lett
 // a link ending in #build, #games, #order or #recite opens that part of the app
 const vh=location.hash.toLowerCase().split(/[#&,]/).find(x=>views.includes(x)),v0=vh||store.get("view","build");if(views.includes(v0))show(v0);
 if(VIEW==="build")maybeDemo();else maybeHDemo(VIEW);
+// My alphabet: every letter, with its four lights; gold when all four are lit
+function openMyAbc(){const all=UP.concat(UP.map(c=>c.toLowerCase())),n=all.filter(mastered).length,work=all.filter(trOn);
+  $("ma-head").textContent=n===52?"You've mastered the whole alphabet!":n?`You've mastered ${n} of 52 letters`:"Your alphabet: master every letter";
+  $("ma-fill").style.width=(n/52*100)+"%";
+  const tile=c=>{const m=maState(c),g=mastered(c);return `<div class="ma-t${g?" gold":""}${trOn(c)?" tr":""}" data-c="${c}">${pickSVG(c,0,false)}<span class="ma-l">${["b","p","r","c"].map(k=>`<i class="${k}${m[k]?" on":""}"></i>`).join("")}</span></div>`};
+  $("ma-up").innerHTML=UP.map(tile).join("");$("ma-low").innerHTML=UP.map(c=>tile(c.toLowerCase())).join("");
+  $("ma-note").textContent=work.length?"Orange letters are being worked on: "+work.join(" "):"Tap a letter to see what's left for it.";
+  document.querySelectorAll("#myabc .ma-t").forEach(t=>t.onclick=()=>{const c=t.dataset.c,m=maState(c);
+    const left=[!m.b&&"build it on the last Build level",!m.p&&"put it in the right place first time",!m.r&&"remember it when it's hidden or going backwards",!m.c&&"clear its mix-ups"].filter(Boolean);
+    $("ma-note").textContent=mastered(c)?c+" is mastered!":c+": still to do — "+left.join("; ")+".";say(spoken(c),.9)});
+  $("myabc").hidden=false;say(n?`You've mastered ${n} of 52 letters.`:"Here is your alphabet. Every letter can turn gold.",.95)}
+$("myabc-btn").onclick=openMyAbc;$("ma-close").onclick=()=>{$("myabc").hidden=true};
 // who's playing: asked on the very first visit (a name for the record), and whenever more than one player uses this device
 function playerName(id){const p=PLAYERS.find(x=>String(x.id)===String(id));return p?p.name:"Player "+id}
 function showPlayers(first,then){const ov=$("players");$("pl-title").textContent=first?"Hello! What's your name?":"Who's playing?";
